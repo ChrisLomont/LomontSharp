@@ -9,9 +9,14 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestLomontSharp", "TestLomo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileScanner", "FileScanner\FileScanner.csproj", "{E61B2E16-5B48-42BD-9360-62225E32E0CC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LomontWin", "LomontWin\LomontWin.csproj", "{B477D1EF-12E3-45F6-99C2-7F193E0C1465}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LomontWin", "LomontWin\LomontWin.csproj", "{B477D1EF-12E3-45F6-99C2-7F193E0C1465}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LomontWPF", "LomontWPF\LomontWPF.csproj", "{E3E3B376-4283-4917-A652-9A023CBC770E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LomontWPF", "LomontWPF\LomontWPF.csproj", "{E3E3B376-4283-4917-A652-9A023CBC770E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{10B6D598-1E57-47D6-A43E-A9BE87DEE6C7}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
