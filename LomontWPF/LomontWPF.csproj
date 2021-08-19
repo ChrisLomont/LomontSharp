@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>Lomont.WPF</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LomontSharp\LomontSharp.csproj" />
+    <ProjectReference Include="..\LomontWin\LomontWin.csproj" />
+  </ItemGroup>
+
+</Project>

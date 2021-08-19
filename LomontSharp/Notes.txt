@@ -1,0 +1,120 @@
+﻿Things to gather from old, other code
+* = done
+
+Groupings:
+
+Base: stuff super common
+
+Numerical:
+    * 3d/lin alg, 
+        TODO: check vecs/mats for same funcs: det, deconstruct, etc.
+    quat, svd, more
+    *clamp, wrap, fuzzy close, etc.
+    *lerp, slerp
+    * Random number generation
+       Rand algos - uniform int, uniform double, fast int, fast double
+    solvers (see my GPS code), marching squares (ConvexHullPuzzle), marching cubes
+    FFT (anything on my pages!)
+
+Geometry:
+    point in poly
+    seg intersects, ray to tri, etc
+    polygon, mesh, tri, quad, etc
+    meshes, mesh tools
+    geometry, intersection, etc.
+    polyhedra
+    AABB
+
+Graphics:
+    *Color RGB, HSL, more?
+    *Color spaces
+    Named colors
+    tiny fonts,
+    graphics algos (circle, line, ??)
+    basic effects (Fire, plasma, hue cycle)
+    SSIM
+
+
+Stats:
+    Distributions,
+    gather, tally, etc.
+    stats, 
+    history, 
+    histogram,
+
+UI:
+  - arcball
+  - pan and zoom, 2d and 3d
+
+WPF
+    mvvm lib (See AllRGB for my code)
+      - viewmodel base
+      - notifiable base
+      - dispatcher
+      - relay command
+    WPF tools
+      - controls that are nice (AllRGB for image)
+         - pan and zoom image
+         - arcball based 3d
+      - converters
+      - logger - colored console, message control? in WPF?
+
+Container:
+    k-d tree, similar
+    * Shufflebag
+    * Fenwicktree
+    tree, graph, directed multigraph? Hypergraph? algos?
+
+Algorithm:
+    * DLX algo (needs testing)
+    Resevoir sampling
+    combinatorics: *shuffle, *permutations, etc.
+    string searching stuff
+    * DDA
+    Fibonacci pseudo rand
+    sort extensions
+
+Format (file, output)
+    WAV
+    *PLY
+    DXF
+    GIF
+    PPM, PBM
+    BMP
+    *treedump,
+    hex dumper
+
+Information (TODO - move these around?)
+    compression things?
+    *crcs, 
+    adler checksum? others?
+    Constant overhead byte stuffing, other protocols
+    error correcting code
+
+Utility (misc utils, dont fit elsewhere)
+    * reflection helpers
+    * xml doc extensions
+    * Clipboard Helper (HTML clipboard)
+    Console art/ascii lib?
+    * Trace stuff
+    * colored text
+
+OS
+    RunDll
+    * Process control and capture
+
+
+Unsorted
+anthing utility?
+GPS?
+parsers
+anything used more than once :)
+giflib?
+profiler,
+GPS code?
+Units?
+
+
+
+
+

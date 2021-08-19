@@ -1,0 +1,29 @@
+﻿Design of a data collection library
+
+Some examples
+https://github.com/skratchdot/stats-collector
+
+things tracked for series of numbers:
+basic: count, min, max, mean, sum
+next: powerSumRunning, product, standardDeviationRunning, varianceRunning
+advanced: amean,count_even, count_odd, count_integer, count_float, count >0, =0, < 0, prime, gmean, hmean
+  mean, median, midRange, range, standardDeviationStable, sum of 1/, varianceStable, 
+
+https://github.com/seqan/seqan3  - bio sequences
+https://github.com/datascopeanalytics/traces - traces - track events over time, can aggregate, view, nice
+
+boost histogram - multidimensional histograms
+
+Wants:
+ - number series: whisker plots, so need fractional values
+ - resevoir sampling?
+ - histogram: bin, sorted, etc.
+ - confusion matrix
+ - tally
+ - data gathers into grid, sparse grid, 
+   - data can be any tuple of thigs?
+   - aggregate over portions of grid?
+
+
+- how to aggregate huge sets?
+- 
