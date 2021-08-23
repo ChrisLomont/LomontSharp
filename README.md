@@ -56,4 +56,5 @@ Much more listed in the code TODO section. I have decades of code to pull pieces
 ## History
 
 Release 0.2 - 8/23/2021 - Added things marked (#)
+
 Release 0.1 - 8/19/2021 - Initial release
