@@ -23,7 +23,6 @@ Base classes. Includes:
 - **Graphics**: color spaces galore: RGB, sRGB, HSL, HSV, CIELAB, CIEXYZ, YIQ, Sepia, Grayscale
 - **Information**: various CRCs, # Bytestream, bitstream
 - **Numerical**: 2d/3d vector and matrix stuff, random number generation
-- **OS**: RunDll, process capture
 - **Stats**: Sequence, Histogram, Tally, correlation grid, # gather, histogram, basic stats
 - **Utility**: colored test formatting for multiple uses, Colored trace listener, functor based trace listener, lots of reflection helpers, ability to reflect on XML documentation.
 
@@ -32,6 +31,7 @@ Base classes. Includes:
 Windows specific stuff. Split off since compiling and needs are different.
 
 * Process capture - capturing console processes into .NET for consumption.
+* (#) RunDll, process capture
 
 ### LomontWPF
 

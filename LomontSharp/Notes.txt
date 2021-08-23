@@ -48,18 +48,6 @@ UI:
   - arcball
   - pan and zoom, 2d and 3d
 
-WPF
-    mvvm lib (See AllRGB for my code)
-      - viewmodel base
-      - notifiable base
-      - dispatcher
-      - relay command
-    WPF tools
-      - controls that are nice (AllRGB for image)
-         - pan and zoom image
-         - arcball based 3d
-      - converters
-      - logger - colored console, message control? in WPF?
 
 Container:
     k-d tree, similar
@@ -111,9 +99,24 @@ Utility (misc utils, dont fit elsewhere)
     * Trace stuff
     * colored text
 
-OS
+Separate DLLs Win and WPF
+
+Win
     # RunDll
     * Process control and capture
+
+WPF
+    mvvm lib (See AllRGB for my code)
+      - viewmodel base
+      - notifiable base
+      - dispatcher
+      - relay command
+    WPF tools
+      - controls that are nice (AllRGB for image)
+         - pan and zoom image
+         - arcball based 3d
+      - converters
+      - logger - colored console, message control? in WPF?
 
 
 Unsorted
