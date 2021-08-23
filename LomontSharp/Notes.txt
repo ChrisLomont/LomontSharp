@@ -74,11 +74,11 @@ Algorithm:
     * DLX algo (needs testing)
     Resevoir sampling
     combinatorics: *shuffle, *permutations, etc.
-    # string searching stuff
+    * string searching stuff
     * DDA
     Fibonacci pseudo rand
-    # sort extensions
-    # shuffle extension
+    * sort extensions
+    * shuffle extension
 
 Format (file, output)
     # WAV
@@ -88,8 +88,9 @@ Format (file, output)
     PPM, PBM
     BMP
     *treedump,
-    # hex dumper
+    * hex dumper
     # ByteWriter
+    # bitstream
     PGN?
 
 Information (TODO - move these around?)
