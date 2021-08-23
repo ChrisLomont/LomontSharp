@@ -7,8 +7,4 @@
     <RootNamespace>Lomont</RootNamespace>
   </PropertyGroup>
 
-  <ItemGroup>
-    <Folder Include="Geometry\" />
-  </ItemGroup>
-
 </Project>

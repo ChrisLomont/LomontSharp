@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace Lomont.Numerical
@@ -8,6 +9,28 @@ namespace Lomont.Numerical
     /// </summary>
     public static class Utility
     {
+
+        /// <summary>
+        /// Perform Kahan summation, which is more accurate than naive summation
+        /// </summary>
+        /// <param name="values"></param>
+        /// <returns></returns>
+        public static double KahanSum(IEnumerable<double> values)
+        {
+            var sum = 0.0; // the accumulator.
+            var c   = 0.0; // a running compensation for lost low-order bits.
+
+            foreach (var v in values)
+            {
+                var y = v - c;     // c is zero the first time around.
+                var t = sum + y;   // Alas, sum is big, y small, so low-order digits of y are lost.
+                c = (t - sum) - y; // (t - sum) cancels the high-order part of y; subtracting y recovers negative (low part of y)
+                sum = t;           // Algebraically, c should always be zero. Beware overly-aggressive optimizing compilers!
+                // Next time around, the lost low part will be added to y in a fresh attempt.
+            }
+
+            return sum;
+        }
 
         static public bool isFuzzyClose(double a, double b)
         {

@@ -64,6 +64,12 @@ namespace Lomont.Numerical
             return a.X * b.X + a.Y * b.Y;
         }
 
+        public static double Cross2D(Vec2 a, Vec2 b)
+        {
+            return a.X * b.Y - a.Y * b.X;
+        }
+
+
         public double Length => System.Math.Sqrt(LengthSquared);
         public double LengthSquared => Dot(this, this);
 

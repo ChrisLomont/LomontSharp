@@ -4,7 +4,7 @@ using Lomont.Numerical;
 
 namespace Lomont.Algorithms
 {
-    internal static class Extensions
+    public static class Extensions
     {
 
         /// <summary>

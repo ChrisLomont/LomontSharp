@@ -10,8 +10,9 @@ using System.Text.RegularExpressions;
 //return;
 
 
-var path = @"C:\Users\Chris\OneDrive\Code";
+//var path = @"C:\Users\Chris\OneDrive\Code";
 //var path = "H:\\Development\\Code";
+var path = "L:\\Programming\\Code2";
 
 var outPath = @"FileCopies1234";
 //var outPath = @"FileCopies1234";
@@ -23,10 +24,16 @@ var exts = new[]{"*.cs","*.fs","*.c","*.cpp"};
 // var pat = " [Ss]huffle";
 //var pat = "[^a-zA-Z][Dd][Dd][Aa][^a-zA-Z]";
 //var pat = "[^a-zA-Z][Ff][Ff][Tt][^a-zA-Z]";
-var pat = "[a]lpha blend";
-//var ignore = "[Aa]pply|[Mm]ultiply|reply|simply|MULTIPLY|supply";
+//var pat = "\\.[Pp][Pp][Yy]\\\"";
+var pat = "PLY";
+//var ignore = "(MeshSplit|[Mm]esh[CT_])";
 var ignore = "";
 var copy = false;
+
+// find:
+// SplDataPoint
+
+// find StatRecorder
 
 // CIEColor, SOlid_Color, Colors, ColorPicker/Converter/etc, NColor,dir
 
@@ -40,7 +47,7 @@ if (!Directory.Exists(dst))
     Directory.CreateDirectory(dst);
 
 int count = 0;
-int linecounter = 0, matchCount = 0;
+int linecounter = 0, matchCount = 0, fileCounter = 0;
 foreach (var ext in exts)
 foreach (var filename in Directory.EnumerateFiles(path, ext, SearchOption.AllDirectories))
 {
@@ -50,6 +57,7 @@ foreach (var filename in Directory.EnumerateFiles(path, ext, SearchOption.AllDir
     //Console.GetCursorPosition()
     var matchingLine = "";
     var matches = false;
+    ++fileCounter;
     foreach (var line in File.ReadAllLines(filename))
     {
         linecounter++;
@@ -68,12 +76,13 @@ foreach (var filename in Directory.EnumerateFiles(path, ext, SearchOption.AllDir
         Console.WriteLine($"{filename} => {matchingLine}");
         if (copy)
         {
-            var d = $"{dst}\\{Path.GetFileNameWithoutExtension(filename)}_{count}.cs";
+            var ext1 = Path.GetExtension(filename);
+            var d = $"{dst}\\{Path.GetFileNameWithoutExtension(filename)}_{count}{ext1}";
             //Console.WriteLine(d);
             File.Copy(filename, d);
         }
     }
 }
 
-Console.WriteLine($"{linecounter} lines counted, {matchCount} matches");
+Console.WriteLine($"{fileCounter} files searched, {linecounter} lines counted, {matchCount} matches");
 

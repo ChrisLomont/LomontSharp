@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Drawing;
 using static System.Math;
 
 namespace Lomont.Algorithms
@@ -11,6 +13,7 @@ namespace Lomont.Algorithms
     public static class DDA
     {
         // todo - add a 3d specialized one
+        // todo - ensure points traversed are direction independent
 
         /// <summary>
         ///     Given start and end lattice points in n-dimensional space, walk
@@ -85,14 +88,21 @@ namespace Lomont.Algorithms
 
 
         /// <summary>
-        /// Iterate over each x,y pair on the line between (x1,y1) and (x2,y2)
+        /// Iterate over each x,y pair on the line between (x1,y1) and (x2,y2).
+        /// Not symmetric - order matters
         /// </summary>
         /// <param name="x1"></param>
         /// <param name="y1"></param>
         /// <param name="x2"></param>
         /// <param name="y2"></param>
-        public static IEnumerable<(int, int)> Dim2(int x1, int y1, int x2, int y2)
-        {
+        public static IEnumerable<(int, int)> Dim2Fast(int x1, int y1, int x2, int y2)
+        {/*
+          Derivation: Chris Lomont
+            line is P: (x-x1)(y2-y1) - (y-y1)(x2-x1) = 0
+            Set error = this
+            Can increment error in each pixel direction
+            each step, choose min error from x dir, y dir, or xy dir
+          */
             var dx = Abs(x2 - x1);
             var dy = Abs(y2 - y1);
             int sx = -1, sy = -1;
@@ -120,6 +130,109 @@ namespace Lomont.Algorithms
             yield return (x1, y1);
 
         }
+
+        /// <summary>
+        /// Iterate over each x,y pair on the line between (x1,y1) and (x2,y2)
+        /// Does so symmetrically: either direction makes the same line
+        /// pixel midpoints are rounded towards positive
+        /// </summary>
+        /// <param name="x1"></param>
+        /// <param name="y1"></param>
+        /// <param name="x2"></param>
+        /// <param name="y2"></param>
+        public static IEnumerable<(int, int)> Dim2(int x1, int y1, int x2, int y2)
+        {
+            /* Derivation: Chris Lomont
+             Do 4 cases to handle slopes -1 to 1, varied on dx, dy, on x major
+             Two need "<" error comparisons, two need "<=" for symmetry
+             For y major, swap meaning of x,y except on output
+             Rewrite terms to get cases to have same internal loops
+             Reverse sign of e to get all comparisons in same direction
+             offset <= case by one to get to < case (or vice versa)
+             Merge cases             
+             */
+
+            // todo - clean and simplify more
+
+            var (dx, dy) = (x2 - x1, y2 - y1);
+
+            // swap x,y to make slope in [-1,1]
+            var swap = Abs(dy) > Abs(dx);
+            if (swap)
+            {
+                (dx, dy) = (dy, dx);
+                (x1, y1) = (y1, x1);
+                (x2, y2) = (y2, x2);
+            }
+
+            var (sx, sy) = (Sign(dx), Sign(dy));
+            var n = Max(Abs(dx), Abs(dy)) + 1;
+
+            var (x, y) = (x1, y1);
+
+            // in x major, stores 2*dx* error of (y-yi). is 0 for first pixel
+            // NOTE: while merging cases, meaning of e gets negated for some
+            // in y major, roles and x and y swapped
+            var e = 0;
+
+            // multiplying dx2 by sx*sy lets the code cases below match better
+            var (dx2, dy2) = (2 * dx * sx * sy, 2 * dy);
+            
+            // error comparison for de <= e cases
+            var ec = dx * (sx);
+
+            if (
+                (0 < dx && 0 <= dy && Abs(dy) <= Abs(dx)) || // slope 0 <= m <= 1
+                (dx < 0 && 0 <= dy && Abs(dy) <= Abs(dx)) // slope -1 <= m <= 0
+                )
+
+            {  // slope 0 <= m <= 1
+            }
+            else if (
+                // slope 0 <= m <= 1
+                (dx < 0 && dy <= 0 && Abs(dy) <= Abs(dx))
+                ||
+                // slope -1 <= m <= 0
+                (0 < dx && dy <= 0 && Abs(dy) <= Abs(dx))
+            )
+            {
+                // reverse e meaning
+                (dx2,dy2) = (-dx2,-dy2);
+                
+                // shift ec to change "<" to "<="
+                ec += 1;
+            }
+
+            if (swap)
+            {
+                for (var i = 0; i < n; ++i)
+                {
+                    yield return new(y, x);
+                    x += sx; // move point in dx direction
+                    e += dy2; // updated error from move
+                    if (ec <= e) // is error too big?
+                    {
+                        y += sy;  // move point up/down
+                        e -= dx2; // error gets adjusted
+                    }
+                }
+            }
+            else
+            {
+                for (var i = 0; i < n; ++i)
+                {
+                    yield return new(x, y);
+                    x += sx; // move point in dx direction
+                    e += dy2; // updated error from move
+                    if (ec <= e) // is error too big?
+                    {
+                        y += sy; // move point up/down
+                        e -= dx2; // error gets adjusted
+                    }
+                }
+            }
+        }
+
 
         /// <summary>
         /// Perform action on each x,y pair on the line between (x1,y1) and (x2,y2)

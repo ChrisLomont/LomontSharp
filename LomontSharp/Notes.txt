@@ -1,5 +1,6 @@
 ﻿Things to gather from old, other code
-* = done
+* = done first release
+# added
 
 Groupings:
 
@@ -19,8 +20,9 @@ Numerical:
 Geometry:
     point in poly
     seg intersects, ray to tri, etc
-    polygon, mesh, tri, quad, etc
-    meshes, mesh tools
+    # mesh
+    # mesh tools
+    polygon, tri, quad, etc
     geometry, intersection, etc.
     polyhedra
     AABB
@@ -37,10 +39,10 @@ Graphics:
 
 Stats:
     Distributions,
-    gather, tally, etc.
-    stats, 
-    history, 
-    histogram,
+    # gather, tally, etc.
+    # stats, 
+    # history, 
+    # histogram,
 
 UI:
   - arcball
@@ -64,25 +66,31 @@ Container:
     * Shufflebag
     * Fenwicktree
     tree, graph, directed multigraph? Hypergraph? algos?
+    ring buffer
+    # priority queue
+    # stable priority queue
 
 Algorithm:
     * DLX algo (needs testing)
     Resevoir sampling
     combinatorics: *shuffle, *permutations, etc.
-    string searching stuff
+    # string searching stuff
     * DDA
     Fibonacci pseudo rand
-    sort extensions
+    # sort extensions
+    # shuffle extension
 
 Format (file, output)
-    WAV
-    *PLY
-    DXF
+    # WAV
+    * PLY
+    # DXF
     GIF
     PPM, PBM
     BMP
     *treedump,
-    hex dumper
+    # hex dumper
+    # ByteWriter
+    PGN?
 
 Information (TODO - move these around?)
     compression things?
@@ -90,6 +98,9 @@ Information (TODO - move these around?)
     adler checksum? others?
     Constant overhead byte stuffing, other protocols
     error correcting code
+    # Bit reader and writer
+    # Binary reader/writer for items
+    basic compressionm codecs?
 
 Utility (misc utils, dont fit elsewhere)
     * reflection helpers
@@ -100,7 +111,7 @@ Utility (misc utils, dont fit elsewhere)
     * colored text
 
 OS
-    RunDll
+    # RunDll
     * Process control and capture
 
 
