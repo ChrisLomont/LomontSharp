@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using static System.Math;
 
 namespace Lomont.Numerical
 {
@@ -19,6 +20,9 @@ namespace Lomont.Numerical
             );
 
 
+        /// <summary>
+        /// Matrix. Default to identity
+        /// </summary>
         public Mat4()
         {
             Values = new double[4, 4];
@@ -45,6 +49,26 @@ namespace Lomont.Numerical
         public Mat4(IEnumerable<double> vals)
         {
             vals.Select((v, i) => Values[i / 4, i % 4] = v).ToList();
+        }
+
+        /// <summary>
+        /// From 4 columns of 3 vectors
+        /// </summary>
+        /// <param name="col1"></param>
+        /// <param name="col2"></param>
+        /// <param name="col3"></param>
+        /// <param name="col4"></param>
+        public Mat4(Vec3 col1, Vec3 col2, Vec3 col3, Vec3 col4)
+        {
+            var cols = new Vec3[] {col1,col2,col3,col4 };
+            for (var r = 0; r < 4; ++r)
+            for (var c = 0; c < 4; ++c)
+            {
+                if (r < 3)
+                    this[r, c] = cols[c][r];
+                else
+                    this[r, c] = c == 3 ? 1 : 0;
+            }
         }
 
 
@@ -190,6 +214,10 @@ namespace Lomont.Numerical
         }
 
 
+        /// <summary>
+        /// Invert matrix
+        /// </summary>
+        /// <returns></returns>
         public Mat4 Invert()
         {
 
@@ -240,6 +268,85 @@ namespace Lomont.Numerical
         }
 
         /// <summary>
+        /// Invert matrix via Gauss Jordan
+        /// </summary>
+        public void InvertGaussJordan()
+        {
+            // Gaussian-Jordan with pivot
+            var n = 4; // size of matrix
+
+            var m = this; // alias
+            var inv = new Mat4(); // identity
+
+            double det = 1; // track determinant to check for singular matrix
+
+            // The current pivot row
+            // For each pass, first find the maximum element in the pivot column.
+            for (var row = 0; row < n; row++)
+            {
+                // find max pivot
+                var bestRow = row;
+                for (var irow = row; irow < n; irow++)
+                    if (Abs(m[irow, row]) > Abs(m[bestRow, row]))
+                        bestRow = irow;
+
+                // swap rows in both
+                if (bestRow != row)
+                {
+                    for (var col = 0; col < n; col++)
+                    {
+                        (inv[row,col],inv[bestRow,col]) = (inv[bestRow, col],inv[row, col]);
+
+                        if (col >= row)
+                        { // lower cols all zeros
+                            (m[row, col], m[bestRow, col]) = (m[bestRow, col], m[row, col]);
+                        }
+                    }
+                }
+
+                // Current pivot is m(row,row).
+                // Det is the product of the pivot elts
+                var pivot = m[row, row];
+                det = det * pivot;
+                if (det == 0)
+                    throw new ArgumentException("Cannot inverting a singular matrix");
+
+                for (var col = 0; col < n; col++)
+                {
+                    // divide by pivot to normalize 
+                    inv[row, col] = inv[row, col] / pivot;
+                    if (col >= row)
+                        m[row, col] = m[row, col] / pivot;
+                }
+
+                for (var irow = 0; irow < n; irow++)
+                {
+                    // add multiple of pivot row to cancel terms
+                    if (irow != row)
+                    {
+                        var factor = m[irow, row];
+                        for (var icol = 0; icol < n; icol++)
+                        {
+                            inv[irow, icol] -= factor * inv[row, icol];
+                            m[irow, icol] -= factor * m[row, icol];
+                        }
+                    }
+                }
+            }
+
+            // copy back
+            for (var r = 0; r < n; ++r)
+            for (var c = 0; c < n; ++c)
+                m[r,c] = inv[r,c];
+        }
+
+        public (Mat4 L, Mat4 U) DecomposeLU()
+        {
+//            todo 
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
         ///     Indexing 0-3 in each component
         /// </summary>
         /// <param1 name="i"></param1>
@@ -265,18 +372,40 @@ namespace Lomont.Numerical
         }
 
         /// <summary>
-        ///     Create a rotation matrix that is an x axis rotation,
-        ///     followed by a y rotation, followed by a z rotation.
-        ///     Angles are in radians.
+        /// Roll, Pitch, Yaw has many variants. This is right handed coord system, right handed angles, Tait-Bryan intrinsic active z-y'-x'' roll, pitch, yaw
+        /// Convention from https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
         /// </summary>
-        /// <param name="x"></param>
-        /// <param name="y"></param>
-        /// <param name="z"></param>
+        /// <param name="roll"></param>
+        /// <param name="pitch"></param>
+        /// <param name="yaw"></param>
         /// <returns></returns>
-        public static Mat4 Rotation(double x, double y, double z)
-        {
-            return ZRotation(z) * YRotation(y) * XRotation(x);
-        }
+        public static Mat4 FromRollPitchYaw(double roll, double  pitch, double yaw) => RotationXYZ(roll, pitch, yaw);
+
+    /// <summary>
+    /// Create rotation matrix: X, then Y, then Z
+    /// Right handed coord, right handed angles, Tait-Bryan intrinsic active z-y'-x'' roll, pitch ,yaw
+    /// Multiply object on right of matrix
+    /// </summary>
+    /// <param name="xRadians"></param>
+    /// <param name="yRadians"></param>
+    /// <param name="zRadians"></param>
+    /// <returns></returns>
+    public static Mat4 RotationXYZ(double xRadians, double yRadians, double zRadians)
+    {
+        // expand out in mathematica:
+        var cx = Cos(xRadians);
+        var sx = Sin(xRadians);
+        var cy = Cos(yRadians);
+        var sy = Sin(yRadians);
+        var cz = Cos(zRadians);
+        var sz = Sin(zRadians);
+        return new Mat4( 
+            cy * cz, sx * sy * cz - cx * sz, cx * sy * cz + sx * sz, 0,
+            cy * sz, sx * sy * sz + cx * cz, cx * sy * sz - sx * cz, 0,
+            -sy, sx * cy, cx * cy, 0,
+              0, 0, 0, 1
+        );
+    }
 
         /// <summary>
         /// Create X rotation matrix with angle in radians
@@ -296,12 +425,23 @@ namespace Lomont.Numerical
             return m;
         }
 
-        /// <summary>
-        /// Create Y rotation matrix with angle in radians
-        /// </summary>
-        /// <param name="angle"></param>
-        /// <returns></returns>
-        internal static Mat4 YRotation(double angle)
+        // create matrix to align world as specified
+        // matrix takes world frame x,y,z to center eyePoint, frame x',y',z'
+        // where z' is the look direction, x' is up, and y' is to right
+        public static Mat4 LookAt(Vec3 eyePoint, Vec3 atPoint, Vec3 upDirection)
+        {
+            var zAxis = (eyePoint - atPoint).Normalized();
+            var xAxis = Vec3.Cross(upDirection, zAxis).Normalized();
+            var yAxis = Vec3.Cross(zAxis, xAxis).Normalized();
+            return new Mat4(xAxis, yAxis, zAxis, eyePoint);
+        }
+
+    /// <summary>
+    /// Create Y rotation matrix with angle in radians
+    /// </summary>
+    /// <param name="angle"></param>
+    /// <returns></returns>
+    internal static Mat4 YRotation(double angle)
         {
             var m = new Mat4();
             var c = System.Math.Cos(angle);
@@ -330,6 +470,39 @@ namespace Lomont.Numerical
             m[1, 0] = -s;
             m[3, 3] = 1;
             return m;
+        }
+
+        /// <summary>
+        /// Orthographic projection.
+        /// Identity if zero (or negative) volume
+        /// </summary>
+        /// <param name="left"></param>
+        /// <param name="right"></param>
+        /// <param name="bottom"></param>
+        /// <param name="top"></param>
+        /// <param name="nearPlane"></param>
+        /// <param name="farPlane"></param>
+        /// <returns></returns>
+        public static Mat4 OrthographicProjection(double left, double right, double bottom, double top, double nearPlane, double farPlane)
+        {
+            var ortho = new Mat4();
+            var tol = 1e-6;
+            if (right < left + tol || bottom < top + tol || farPlane < nearPlane + tol)
+                return ortho;
+
+            var width = right - left;
+            var height = bottom - top;
+            var clip = farPlane - nearPlane;
+
+            ortho[0, 0] = 2 / width;
+            ortho[1, 1] = -2 / height;
+            ortho[2, 2] = -2 / clip;
+
+            ortho[0, 3] = -(left + right) / width;
+            ortho[1, 3] = (top + bottom) / height;
+            ortho[2, 3] = -(nearPlane + farPlane) / clip;
+
+            return ortho;
         }
 
 
@@ -422,22 +595,34 @@ namespace Lomont.Numerical
 
 
 
-            rot = rot.Transpose(); // todo - this seems wrong, but works - what is going on?
+            rot = rot.Transposed(); // todo - this seems wrong, but works - what is going on?
 
             return t2 * rot * t1;
         }
 
         /// <summary>
-        /// Matrix transpose
+        /// Return transposed matrix
         /// </summary>
         /// <returns></returns>
-        public Mat4 Transpose()
+        public Mat4 Transposed()
         {
             var m = new Mat4();
             for (var i = 0; i < 4; ++i)
             for (var j = 0; j < 4; ++j)
                 m[i, j] = this[j, i];
             return m;
+        }
+
+        /// <summary>
+        /// Transpose in place
+        /// </summary>
+        public void Transpose()
+        {
+            for (var i = 0; i < 4; i++)
+            for (var j = i + 1; j < 4; j++)
+            { // swap
+                (this[i, j], this[j,i]) = (this[j,i], this[i, j]);
+            }
         }
 
 
@@ -449,7 +634,7 @@ namespace Lomont.Numerical
         public static Mat4 CreateRotation(Vec3 startAxis, Vec3 endAxis, double radians)
         {
             // from http://inside.mines.edu/fs_home/gmurray/ArbitraryAxisRotation/
-            var dir = (endAxis - startAxis).Normalize();
+            var dir = (endAxis - startAxis).Normalized();
             var u = dir.X;
             var v = dir.Y;
             var w = dir.Z;
@@ -498,7 +683,7 @@ namespace Lomont.Numerical
         /// <returns></returns>
         public static Vec3 GetANormalVector(Vec3 v)
         {
-            v = v.Normalize();
+            v = v.Normalized();
             var (x, y, z) = v.Map(System.Math.Abs); // abs values
             // x^2+y^2+z^2==1 => one is >= 1/3 => abs x,y,z will have one >= sqrt(1/3) > 1/2
             // one will be >= 0.5
@@ -590,8 +775,8 @@ namespace Lomont.Numerical
             // also fails on axis = 0,0,0
 
 
-            var v1 = source.Normalize();
-            var v2 = dest.Normalize();
+            var v1 = source.Normalized();
+            var v2 = dest.Normalized();
             var axis = Vec3.Cross(v1, v2);
             var cosA = Vec3.Dot(v1, v2);
 
@@ -691,10 +876,10 @@ namespace Lomont.Numerical
         /// <returns></returns>
         public static (Mat4, Mat4) MapFrame(Vec3 p0, Vec3 p1, Vec3 p2)
         {
-            var x = (p0 - p1).Normalize();
-            var t = (p2 - p1).Normalize(); // place in upper half plane
-            var z = Vec3.Cross(x, t).Normalize();
-            var y = Vec3.Cross(z, x).Normalize();
+            var x = (p0 - p1).Normalized();
+            var t = (p2 - p1).Normalized(); // place in upper half plane
+            var z = Vec3.Cross(x, t).Normalized();
+            var y = Vec3.Cross(z, x).Normalized();
 
             // xy plane to item....
             var q = new Mat4();
@@ -704,7 +889,7 @@ namespace Lomont.Numerical
 
             // column matrix x y z p1 is transform, we want inverse
             // cheat by inverting rotation via transpose, and inverting translation....
-            var p = q.Transpose(); // transpose inverts rotation
+            var p = q.Transposed(); // transpose inverts rotation
 
             (p[0, 0], p[0, 1], p[0, 2]) = x;
             (p[1, 0], p[1, 1], p[1, 2]) = y;

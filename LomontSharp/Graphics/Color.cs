@@ -35,6 +35,19 @@ namespace Lomont.Graphics
             );
         }
 
+        public (byte r, byte g, byte b, byte a) ToBytes()
+        {
+            var (r, g, b, a) = this; // double
+            return
+            (
+                ColorUtils.Upscale(r),
+                ColorUtils.Upscale(g),
+                ColorUtils.Upscale(b),
+                ColorUtils.Upscale(a)
+            );
+
+        }
+
         /// <summary>
         /// Return a new color that has the each R,G,Blue component the max of the others
         /// </summary>
@@ -145,7 +158,7 @@ namespace Lomont.Graphics
         /// Alpha is full opacity
         /// </summary>
         /// <returns></returns>
-        public static Color Random(Func<double> get) => new Color(get(), get(), get(), 1.0);
+        public static Color Random(Func<double> get) => new(get(), get(), get(), 1.0);
 
         /// <summary>
         /// Given hue in [0,360), saturation and lightness in [0,1]

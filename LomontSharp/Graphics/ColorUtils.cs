@@ -97,15 +97,10 @@ namespace Lomont.Graphics
         /// <returns></returns>
         public static byte Upscale(double realColor)
         {
-            realColor = Clamp01(realColor); // snap ends to [0,1]
-
-            // 256 bins to fall into, each 1/256 wide, bin # thus Floor(v/(1/256))
-            // 0 index by subtracting 1
-            var bin = Math.Floor(realColor * 256) - 1;
-            if (bin < 0) bin = 0;
-            if (bin > 255) bin = 255; // not possible?
-            return (byte)bin;
+            // todo - explain carefully why this derivation is best
+            return (byte)Math.Round(realColor * 255);
         }
+
         /// <summary>
         /// Convert color in [0,255] to [0,1]
         /// </summary>
@@ -113,19 +108,19 @@ namespace Lomont.Graphics
         /// <returns></returns>
         public static double Downscale(byte color)
         {
-            // todo - derive this and above carefully to make round tripping robust and accurate
-            throw new NotImplementedException("");
+            return color / 255.0;
         }
 
+
         /// <summary>
-        /// takes r,g,b in [0,1]
-        /// returns value  [0,1]
-        /// </summary>
-        /// <param name="r"></param>
-        /// <param name="g"></param>
-        /// <param name="b"></param>
-        /// <returns></returns>
-        public static double RGBToGrayscale(double r, double g, double b)
+            /// takes r,g,b in [0,1]
+            /// returns value  [0,1]
+            /// </summary>
+            /// <param name="r"></param>
+            /// <param name="g"></param>
+            /// <param name="b"></param>
+            /// <returns></returns>
+            public static double RGBToGrayscale(double r, double g, double b)
         {
             return 0.299 * r + 0.587 * g + 0.114 * b;
         }
@@ -383,9 +378,9 @@ namespace Lomont.Graphics
 
             return new Color(s, t, u, 1);
         }
-        #endregion
+#endregion
 
-        #region Blending
+#region Blending
 
         /* Implement methods from
           1.  "Interpreting OpenEXR Deep Pixels," 
@@ -511,7 +506,7 @@ namespace Lomont.Graphics
 
 
 
-    #endregion
+#endregion
 
 }
 }

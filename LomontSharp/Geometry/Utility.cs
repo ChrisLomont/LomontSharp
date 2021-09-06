@@ -1,22 +1,102 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Lomont.Numerical;
+using static System.Math;
 
 namespace Lomont.Geometry
 {
     public static class Utility
     {
+        // todo - orgainze this file better
+
         // get normal to triangle
         public static Vec3 Normal(Vec3 p0, Vec3 p1, Vec3 p2)
         {
             var d1 = p1 - p0;
             var d2 = p2 - p0;
             var n = Vec3.Cross(d1, d2);
-            return n.Normalize();
+            return n.Normalized();
+
+        }
+
+        /// <summary>
+        /// Clip a segment to a box
+        /// </summary>
+        /// <param name="p1"></param>
+        /// <param name="p2"></param>
+        /// <param name="minCorner"></param>
+        /// <param name="maxCorner"></param>
+        /// <returns>if clipped, and the clipped points</returns>
+        public static (bool, Vec3 clippedP1, Vec3 clippedP2) ClipSegmentToBox(Vec3 p1, Vec3 p2, Vec3 minCorner, Vec3 maxCorner)
+        {
+            // Smits’ method, with improvements from "An Efficient and Robust Ray–Box Intersection Algorithm" by Williams, Barrus, Morley, and Shirley
+
+            // parametric line L(t)=p1+t*(p2-p1)
+            // clip on t
+
+            var dir = p2 - p1;
+
+            // clip each dim one at a time, track min, bail if out of bounds
+            var (tmin, tmax) = ClipSlab(dir.X, minCorner.X, maxCorner.X, p1.X);
+
+            // misses box?
+            if (tmax < 0 || 1 < tmin)
+                return (false, Vec3.Zero, Vec3.Zero);
+
+            var (tymin, tymax) = ClipSlab(dir.Y, minCorner.Y, maxCorner.Y, p1.Y);
+
+            // misses box?
+            if (tymax < 0 || 1 < tymin)
+                return (false, Vec3.Zero, Vec3.Zero);
+            if (tmin > tymax || tymin > tmax)
+                return (false, Vec3.Zero, Vec3.Zero);
+
+            // keep min values
+            if (tymin > tmin) // note this inequality seems backwards because we're more restrictive
+                tmin = tymin;
+            if (tymax < tmax)
+                tmax = tymax;
+
+            var (tzmin, tzmax) = ClipSlab(dir.Z, minCorner.Z, maxCorner.Z, p1.Z);
+
+            // misses box?
+            if (tzmax < 0 || 1 < tzmin)
+                return (false, Vec3.Zero, Vec3.Zero);
+            if ((tmin > tzmax) || (tzmin > tmax))
+                return (false, Vec3.Zero, Vec3.Zero);
+
+            // final bounds
+            if (tzmin > tmin)
+                tmin = tzmin;
+            if (tzmax < tmax)
+                tmax = tzmax;
+
+            // check against actual segment overlap
+            if (tmin <= 1 && 0 <= tmax)
+            {
+                tmin = Max(0, tmin);
+                tmax = Min(1, tmax);
+
+                p1 = p1 + dir * tmin;
+                p2 = p1 + dir * tmax;
+
+                return (true, p1, p2);
+            }
+
+            return (false, Vec3.Zero, Vec3.Zero);
+
+            // helper - clips a bound to a slab of values, handles infinities properly
+            static (double min, double max) ClipSlab(double dir, double minVal, double maxVal, double val)
+            {
+                // DO NOT CHECK FOR ZERO! This is designed to work correctly with IEEE 754 math
+                var div = 1 / dir;
+
+                if (div >= 0) // note - handles infinity cases also
+                    return ((minVal - val) * div, (maxVal - val) * div);
+                else
+                    return ((maxVal - val) * div, (minVal - val) * div);
+            }
 
         }
 
@@ -25,9 +105,42 @@ namespace Lomont.Geometry
             return Math.Abs(v) < 1e-5; // todo - make better
         }
 
+        /// <summary>
+        /// Polygon area. Assumes is planar
+        /// </summary>
+        /// <param name="points"></param>
+        /// <returns></returns>
+        public static double PolygonArea(IList<Vec3> points)
+        {
+            // Stokes theorem
+            // http://geomalgorithms.com/a01-_area.html
+
+            var len = points.Count;
+            if (len < 3)
+                return 0;
+
+            // normal
+            var p0 = points[0];
+            var p1 = points[1];
+            var p2 = points[2];
+
+            var normal = Vec3.Cross(p0 - p1, p2 - p1);
+            if (isZero(normal.Length))
+                return 0; // no normal, fails an assumption
+
+            normal.Normalize();
+
+            var sum = new Vec3();
+            for (var i = 0; i < len; ++i)
+                sum += Vec3.Cross(points[i], points[(i + 1) % len]);
+
+            return Abs(0.5 * Vec3.Dot(normal, sum));
+        }
+
+
 
         // given p in quad p0-p3, find u,v parameter space coords [0,1]
-        public static(double u, double v) InvertBilinear(Vec2 p,
+        public static (double u, double v) InvertBilinear(Vec2 p,
             Vec2 p0, Vec2 p1, Vec2 p2, Vec2 p3)
         {
             // https://iquilezles.org/www/articles/ibilinear/ibilinear.htm
@@ -105,6 +218,7 @@ namespace Lomont.Geometry
             var beta = v / vmax;
             return p0 + alpha * (p1 - p0) + beta * (p3 - p0) + alpha * beta * (p0 - p1 + p2 - p3);
         }
+
         // Bilinear interpolate
         // u,v goes (0,0) to (umax,vmax) inclusive
         // points in circumference order
@@ -152,8 +266,122 @@ namespace Lomont.Geometry
                     (p.X < (vert[j].X - vert[i].X) * (p.Y - vert[i].Y) / (vert[j].Y - vert[i].Y) + vert[i].X))
                     c = !c;
             }
+
             return c;
         }
+
+        /// <summary>
+        /// Find closest points on two segments
+        /// </summary>
+        /// <param name="p1"></param>
+        /// <param name="p2"></param>
+        /// <param name="q1"></param>
+        /// <param name="q2"></param>
+        /// <returns></returns>
+        public static (double, Vec3 pClosest, Vec3 qClosest) SegmentToSegmentDistance(Vec3 p1, Vec3 p2, Vec3 q1, Vec3 q2)
+        {
+            // adapted from algorithm http://geomalgorithms.com/a07-_distance.html#dist3D_Segment_to_Segment()
+            // Copyright 2001 softSurfer, 2012 Dan Sunday
+            // This code may be freely used, distributed and modified for any purpose
+            // providing that this copyright notice is included with it.
+            // SoftSurfer makes no warranty for this code, and cannot be held
+            // liable for any real or imagined damage resulting from its use.
+            // Users of this code must verify correctness for their application.
+
+            // This avoids the case where someone is doing line to point with p1, p2 as the line and q1, q2 as the point as this does not account for this right now
+            Trace.Assert((q1 != q2) || ((p1 == p2) || (q1 == q2)));
+
+            var u = p2 - p1;
+            var v = q2 - q1;
+            var w = p1 - q1;
+
+            var a = Vec3.Dot(u, u); // always >= 0
+            var b = Vec3.Dot(u, v);
+            var c = Vec3.Dot(v, v); // always >= 0
+            var d = Vec3.Dot(u, w);
+            var e = Vec3.Dot(v, w);
+
+            // discriminant
+            var D = a * c - b * b; // always >= 0
+
+            // compute the line parameters of the two closest points
+            var sD = D; // sc = sN / sD, default sD = D >= 0
+            var tD = D; // tc = tN / tD, default tD = D >= 0
+
+            double sN, tN;
+
+            if (isZero(D))
+            {
+                // the lines are almost parallel
+                sN = 0.0; // force using point P0 on segment S1
+                sD = 1.0; // to prevent possible division by 0.0 later
+                tN = e;
+                tD = c;
+            }
+            else
+            {
+                // get the closest points on the infinite lines
+                sN = (b * e - c * d);
+                tN = (a * e - b * d);
+                if (sN < 0.0)
+                {
+                    // sc < 0 => the s=0 edge is visible
+                    sN = 0.0;
+                    tN = e;
+                    tD = c;
+                }
+                else if (sN > sD)
+                {
+                    // sc > 1  => the s=1 edge is visible
+                    sN = sD;
+                    tN = e + b;
+                    tD = c;
+                }
+            }
+
+            if (tN < 0.0)
+            {
+                // tc < 0 => the t=0 edge is visible
+                tN = 0.0;
+                // recompute sc for this edge
+                if (-d < 0.0)
+                    sN = 0.0;
+                else if (-d > a)
+                    sN = sD;
+                else
+                {
+                    sN = -d;
+                    sD = a;
+                }
+            }
+            else if (tN > tD)
+            {
+                // tc > 1  => the t=1 edge is visible
+                tN = tD;
+                // recompute sc for this edge
+                if ((-d + b) < 0.0)
+                    sN = 0;
+                else if ((-d + b) > a)
+                    sN = sD;
+                else
+                {
+                    sN = (-d + b);
+                    sD = a;
+                }
+            }
+
+            // finally do the division to get sc and tc
+            var sc = isZero(sN) ? 0.0 : sN / sD;
+            var tc = isZero(tN) ? 0.0 : tN / tD;
+
+            // closest points:
+            var pp = p1 + sc * u;
+            var qq = q1 + tc * v;
+
+            return ((pp - qq).Length, pp, qq);
+        }
+
+
 
         /// <summary>
         /// Given a point p in the same plane as a triangle p0,p1,p2,
@@ -231,7 +459,8 @@ namespace Lomont.Geometry
 
 
             if (rxsz && qmpxrz)
-            { // collinear
+            {
+                // collinear
                 var r2 = Vec2.Dot(r, r);
                 var t0 = Vec2.Dot(q - p, r) / r2;
                 var t1 = Vec2.Dot(q + s - p, r) / r2;
@@ -244,11 +473,13 @@ namespace Lomont.Geometry
                 return !(t1 < 0 || 1 < t0);
             }
             else if (rxsz && !qmpxrz)
-            { // parallel and non-intersecting
+            {
+                // parallel and non-intersecting
                 return false;
             }
             else
-            { // rxs != 0
+            {
+                // rxs != 0
                 var t = Vec2.Cross2D(q - p, s) / rxs;
                 var u = qmpxr / rxs;
                 if (0 <= t && t <= 1 && 0 <= u && u <= 1)
@@ -258,7 +489,12 @@ namespace Lomont.Geometry
             return false;
         }
 
-        // sloppy algo, allows false negatives on some edge of polygon cases
+        /// <summary>
+        /// 2D point in polygon
+        /// </summary>
+        /// <param name="point"></param>
+        /// <param name="polygon"></param>
+        /// <returns></returns>
         public static bool PointInPolygon(Vec2 point, List<Vec2> polygon)
         {
             var (testx, testy) = point;
@@ -278,6 +514,62 @@ namespace Lomont.Geometry
 
             return c;
         }
+
+
+        /// <summary>
+        /// Ray-triangle intersection
+        /// </summary>
+        /// <param name="rayOrigin"></param>
+        /// <param name="rayDir"></param>
+        /// <param name="p0"></param>
+        /// <param name="p1"></param>
+        /// <param name="p2"></param>
+        /// <returns>if hits, the point, and the distance</returns>
+        public static (bool hits, Vec3 point, double distance) 
+            RayTriangleIntersection(
+                Vec3 rayOrigin,
+                Vec3 rayDir,
+                Vec3 p0,
+                Vec3 p1,
+                Vec3 p2
+                )
+        {
+            // Möller–Trumbore intersection algorithm
+            // https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
+
+            var n = rayDir.Normalized();
+
+            // edges
+            var e10 = p1 - p0;
+            var e20 = p2 - p0;
+
+            var h = Vec3.Cross(n, e20); // perp to edge 2->0 and ray
+            var a = Vec3.Dot(e10, h);
+            if (isZero(a)) // if h parallel to edge 1-0 then no hit
+                return (false,Vec3.Zero,Double.MaxValue);
+
+            var f = 1 / a;
+            var s = rayOrigin - p0;
+            var u = f * Vec3.Dot(s, h);
+            if (u < 0.0 || u > 1.0)
+                return (false, Vec3.Zero, Double.MaxValue);
+
+            var q = Vec3.Cross(s, e10);
+            var v = f * Vec3.Dot(n, q);
+
+            if (v < 0.0 || u + v > 1.0)
+                return (false, Vec3.Zero, Double.MaxValue);
+
+            // t is parametric intersection point on line
+            var t = f * Vec3.Dot(e20, q);
+
+            // no hit if too close or behind origin
+            if (t < 0.000001)
+                return (false, Numerical.Vec3.Zero, 0);
+
+            return (true, rayOrigin + n * t, t);
+        }
+
 
     }
 }

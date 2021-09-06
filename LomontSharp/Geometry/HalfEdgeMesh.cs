@@ -46,82 +46,202 @@ namespace Lomont.Geometry
         /// Initialize Half edge mesh with vertices and faces.
         /// </summary>
         /// <param name="vertices"></param>
-        /// <param name="triangles"></param>
+        /// <param name="triangleFaceIndices"></param>
 
-        public HalfEdgeMeshNew(IList<Vec3> vertices, IEnumerable<(int,int,int)> triangles)
+        public HalfEdgeMeshNew(IList<Vec3> vertices, IEnumerable<(int,int,int)> triangleFaceIndices)
         {
             foreach (var v in vertices)
                 this.vertices.Add(new VertexData(v, INVALID));
-            foreach (var (i1, i2, i3) in triangles)
-                faces.Add(new PolygonData(INVALID, i1, i2, i3));
+            foreach (var (i1, i2, i3) in triangleFaceIndices)
+                faces.Add(new FaceData(INVALID, i1, i2, i3));
             Construct();
         }
 
-        #region Accessors
-        public int NextHalfEdge(int currentHalfEdgeIndex)
+        #region Utility
+
+
+        /// <summary>
+        /// Contract this edge to a point v
+        /// Removes faces, collapses edges, as expected
+        /// Point v replaces lower indexed older vertex
+        /// </summary>
+        /// <param name="currentHalfEdgeIndex"></param>
+        public void Contract(int currentHalfEdgeIndex, Vec3 v)
         {
-            if (currentHalfEdgeIndex == INVALID)
-                return INVALID;
-            return halfEdges[currentHalfEdgeIndex].nextHalfIndex;
+
+            /* Diagram
+             *
+             * Contract edge a0, collapsing vertices P0 and P2, replacing with P
+             * For now assume all triangles are present, else throw
+             *
+             *  Needs
+             *  Faces A and B removed by setting all parameters to INVALID
+             *  lower index of P1 and P0 removed, other changed to P
+             *  1. a1/d1 pair removed
+             *  2. d2 points to a2, a2 points to d0, a2 points to D, a2 origin is P
+             *  3. c2 origin set to P
+             * Repeat 1,2,3 for e1/b1 and such
+             *
+             * P points to c2
+             *
+             *  a0,b0 marked as unused, c2+d1 paired and e1+f2 paired (move one of each, and pointers to it)
+             *
+             *
+             *   *-------------*-------------*
+             *    \    c0     / \    d0     /
+             *     \         /   \         /
+             *      \   C   /  A  \   D   /
+             *       \c1 c2/a2   a1\d1 d2/
+             *        \   /         \   /
+             *         \ /    a0->   \ /
+             *       P0 *-------P-----* P1
+             *         / \   <-b0    / \
+             *        /   \         /   \
+             *       /     \b1   b2/     \
+             *      /e2   e1\  B  /f2   f1\
+             *     /    E    \   /    F    \
+             *    /    e0->   \ /    f0->   \
+             *   *-------------*-------------*
+             */
+
+
+            // triangle 1
+            var c0 = currentHalfEdgeIndex;
+            var c1 = NextHalfEdge(c0);
+            var c2 = NextHalfEdge(c1);
+            Trace.Assert(NextHalfEdge(c2) == c0);
+
+            // triangle 2
+            var e0 = PairedHalfEdge(c0);
+            var e1 = NextHalfEdge(e0);
+            var e2 = NextHalfEdge(e1);
+            Trace.Assert(NextHalfEdge(e2) == e0);
+
+            // for now, disallow contracting borders
+            Trace.Assert(LeftFaceIndex(c0) != INVALID && LeftFaceIndex(e0) != INVALID);
+
+            // some edges needing collapsed
+
+
+
+
+
+            //todo
         }
-        public int PrevHalfEdge(int currentHalfEdgeIndex)
+
+
+        IEnumerable<int> FacesAroundVertex(int vertexIndex)
         {
-            if (currentHalfEdgeIndex == INVALID)
+            // todo
+            throw new NotImplementedException();
+        }
+        
+        /// <summary>
+        /// All outgoing half edges from a vertex
+        /// </summary>
+        /// <param name="vertexIndex"></param>
+        /// <returns></returns>
+        IEnumerable<int> EdgesAroundVertex(int vertexIndex)
+        {
+            // todo
+            throw new NotImplementedException();
+        }
+
+        /* TODO public ops to implement
+         Add/delete vertex, edge, face, 
+         */
+
+
+        #endregion
+
+        #region Accessors
+        public int NextHalfEdge(int halfEdgeIndex)
+        {
+            if (halfEdgeIndex == INVALID)
+                return INVALID;
+            return halfEdges[halfEdgeIndex].nextHalfIndex;
+        }
+        public int PrevHalfEdge(int halfEdgeIndex)
+        {
+            if (halfEdgeIndex == INVALID)
                 return INVALID;
             
-            var cur = currentHalfEdgeIndex;
+            var cur = halfEdgeIndex;
             
             // if this doesn't terminate, there is an internal error
             // todo - detect and throw?
             while (true)
             {
                 var nxt = halfEdges[cur].nextHalfIndex;
-                if (nxt == currentHalfEdgeIndex)
+                if (nxt == halfEdgeIndex)
                     return cur;
                 cur = nxt;
             }
         }
 
-        public int DestVertex(int currentHalfEdgeIndex)
+        public int DestVertex(int halfEdgeIndex)
         {
-            if (currentHalfEdgeIndex == INVALID)
+            if (halfEdgeIndex == INVALID)
                 return INVALID;
 
-            return SourceVertex(NextHalfEdge(currentHalfEdgeIndex));
+            return SourceVertex(NextHalfEdge(halfEdgeIndex));
         }
-        public int SourceVertex(int currentHalfEdgeIndex)
+        public int SourceVertex(int halfEdgeIndex)
         {
-            if (currentHalfEdgeIndex == INVALID)
+            if (halfEdgeIndex == INVALID)
                 return INVALID;
 
-            return halfEdges[currentHalfEdgeIndex].originVertexIndex;
+            return halfEdges[halfEdgeIndex].originVertexIndex;
         }
-
-        public int PairedHalfEdge(int currentHalfEdgeIndex)
+        public int PairedHalfEdge(int halfEdgeIndex)
         {
-            if (currentHalfEdgeIndex == INVALID)
+            if (halfEdgeIndex == INVALID)
                 return INVALID;
-            return currentHalfEdgeIndex ^ 1; // they're in pairs
+            return halfEdgeIndex ^ 1; // they're in pairs
         }
 
-        public int LeftFaceIndex(int currentHalfEdgeIndex)
+        public int LeftFaceIndex(int halfEdgeIndex)
         {
-            if (currentHalfEdgeIndex == INVALID)
+            if (halfEdgeIndex == INVALID)
                 return INVALID;
-            return halfEdges[currentHalfEdgeIndex].leftPolygonIndex;
+            return halfEdges[halfEdgeIndex].leftFaceIndex;
         }
-        public int VertexCount => vertices.Count;
-        public int FaceCount => faces.Count;
 
+        /// <summary>
+        /// Vertex from index - always valid if vertex index was just obtained
+        /// todo - make always work
+        /// </summary>
+        public Vec3 Vertex(int vertexIndex) => vertices[vertexIndex].vertex;
+
+        /// <summary>
+        /// Vertex count
+        /// </summary>
+        public int VertexCount => GetVertices().Count();
+
+        /// <summary>
+        /// Face count
+        /// </summary>
+        public int FaceCount => GetFaces().Count();
+
+        /// <summary>
+        /// Vertices - not valid once some have been deleted
+        /// todo - make always work
+        /// </summary>
         public IEnumerable<Vec3> GetVertices()
-        {
+        { // todo - now mismatch from face indices.... need to make compact work
             foreach (var v in vertices)
-                yield return v.vertex;
+                if (Valid(v))
+                    yield return v.vertex;
         }
+        /// <summary>
+        /// Vertices - not valid once some have been deleted
+        /// todo - make always work
+        /// </summary>
         public IEnumerable<List<int>> GetFaces()
         {
             foreach (var f in faces)
-                yield return new List<int>{f.i1,f.i2,f.i3};
+                if (Valid(f))
+                    yield return new List<int>{f.i1,f.i2,f.i3};
         }
 
         #endregion
@@ -156,7 +276,7 @@ namespace Lomont.Geometry
             for (var hIndex = 0; hIndex < halfEdges.Count; ++hIndex)
             {
                 var h = halfEdges[hIndex];
-                output.WriteLine($"{hIndex}: {h.nextHalfIndex} {h.leftPolygonIndex} {h.originVertexIndex}");
+                output.WriteLine($"{hIndex}: {h.nextHalfIndex} {h.leftFaceIndex} {h.originVertexIndex}");
             }
 
             output.Flush();
@@ -165,6 +285,27 @@ namespace Lomont.Geometry
 
         #region Implementation
 
+        /// <summary>
+        /// This item valid? Or deleted
+        /// Simply checks if halfindex valid
+        /// </summary>
+        /// <param name="v"></param>
+        /// <returns></returns>
+        bool Valid(VertexData v)
+        {
+            return v.halfIndex != INVALID;
+        }
+
+        /// <summary>
+        /// This item valid? Or deleted
+        /// Simply checks if halfindex valid
+        /// </summary>
+        /// <param name="f"></param>
+        /// <returns></returns>
+        bool Valid(FaceData f)
+        {
+            return f.halfIndex != INVALID;
+        }
 
         /// <summary>
         /// Build internal invariants. Assumes all vertices and face vertex indices are correct.
@@ -190,9 +331,9 @@ namespace Lomont.Geometry
                 var h31Index = GetEdge(face.i3, face.i1, fIndex);
 
                 // make loop, point to face
-                halfEdges[h12Index] = halfEdges[h12Index] with { nextHalfIndex = h23Index, leftPolygonIndex = fIndex };
-                halfEdges[h23Index] = halfEdges[h23Index] with { nextHalfIndex = h31Index, leftPolygonIndex = fIndex };
-                halfEdges[h31Index] = halfEdges[h31Index] with { nextHalfIndex = h12Index, leftPolygonIndex = fIndex };
+                halfEdges[h12Index] = halfEdges[h12Index] with { nextHalfIndex = h23Index, leftFaceIndex = fIndex };
+                halfEdges[h23Index] = halfEdges[h23Index] with { nextHalfIndex = h31Index, leftFaceIndex = fIndex };
+                halfEdges[h31Index] = halfEdges[h31Index] with { nextHalfIndex = h12Index, leftFaceIndex = fIndex };
             }
 
             //Dump(Console.Out,"Triangles added");
@@ -257,7 +398,7 @@ namespace Lomont.Geometry
                     var (hIndex,t) = MakeHalfEdgePair();
                     halfEdges[hIndex] = halfEdges[hIndex] with
                     {
-                        leftPolygonIndex = fIndex, originVertexIndex = v1Index
+                        leftFaceIndex = fIndex, originVertexIndex = v1Index
                     };
                     halfEdges[t] = halfEdges[t] with { originVertexIndex = v2Index};
                     map.Add(key,hIndex);
@@ -266,12 +407,12 @@ namespace Lomont.Geometry
                 else
                 {
                     var hIndex = map[key]; // was allocated elsewhere, so should be face allocated
-                    Trace.Assert(halfEdges[hIndex].leftPolygonIndex != INVALID);
+                    Trace.Assert(halfEdges[hIndex].leftFaceIndex != INVALID);
                     if (LeftFaceIndex(hIndex) != fIndex)
                         hIndex = PairedHalfEdge(hIndex);
                     Trace.Assert(LeftFaceIndex(hIndex) == INVALID || LeftFaceIndex(hIndex) == fIndex);
                     if (LeftFaceIndex(hIndex) == INVALID) // was never set
-                        halfEdges[hIndex] = halfEdges[hIndex] with {leftPolygonIndex = fIndex};
+                        halfEdges[hIndex] = halfEdges[hIndex] with {leftFaceIndex = fIndex};
 
                     return hIndex;
                 }
@@ -307,7 +448,7 @@ namespace Lomont.Geometry
             void ProcessNeighbor(int halfEdgeIndex)
             {
                 var nbrHeIndex = PairedHalfEdge(halfEdgeIndex);
-                var nbrFaceIndex = halfEdges[nbrHeIndex].leftPolygonIndex;
+                var nbrFaceIndex = halfEdges[nbrHeIndex].leftFaceIndex;
                 if (nbrFaceIndex == INVALID)
                 {
                     // boundary of shape, no neighbor, must be oriented and attached after all else done
@@ -349,14 +490,38 @@ namespace Lomont.Geometry
                 halfEdges[h2] = halfEdges[h2] with { nextHalfIndex = h1, originVertexIndex = v3 };
                 halfEdges[h3] = halfEdges[h3] with { nextHalfIndex = h2, originVertexIndex = v1 };
             }
+        }
 
+        /// <summary>
+        /// Make internals compact by removing unused and reindexing things
+        /// </summary>
+        void Compact()
+        {
+             //todo
+        }
 
+        /// <summary>
+        /// Perform integrity checks, return true on success
+        /// </summary>
+        bool CheckIntegrity()
+        {
+            // want to do all this on the data structures themselves?
+            // or use accessors to check them too?
+            //todo;
+            return false;
+
+            // check each half edge in a loop
+
+            // check each face has half edge loop
+
+            // check each vertex associated with loop on a face
+
+            // check half edges: paired, src,dst same points, etc.
         }
 
         // add pair of half edges, return their indices
         (int he1, int he2) MakeHalfEdgePair()
         {
-            // vertex order is temp here, corrected later
             var he1 = new HalfData(INVALID, INVALID, INVALID);
             var he2 = new HalfData(INVALID, INVALID, INVALID);
 
@@ -396,28 +561,31 @@ namespace Lomont.Geometry
             return p;
         }
 
-
-
-        // class used during matching
-        class P
-        {
-            public int f1 = INVALID;
-            public int f2 = INVALID;
-            public int he = INVALID;
-        }
-
-
         // internal storage
         readonly List<HalfData> halfEdges = new();
-        readonly List<PolygonData> faces = new ();
+        readonly List<FaceData> faces = new ();
         readonly List<VertexData> vertices = new();
 
         // pair half edge is this index ^ 1 (created in pairs)
         // prev half edge is found via loop
         // dest vertex is found from paired 
-        record HalfData(int nextHalfIndex, int originVertexIndex, int leftPolygonIndex);
+        record HalfData(int nextHalfIndex, int originVertexIndex, int leftFaceIndex);
+        /// <summary>
+        /// Each vertex points to a half edge
+        /// TODO - make invariant so this vertex is the one referenced by the half edge
+        /// </summary>
+        /// <param name="vertex"></param>
+        /// <param name="halfIndex"></param>
         record VertexData(Vec3 vertex, int halfIndex);
-        record PolygonData(int halfIndex, int i1, int i2, int i3);
+        /// <summary>
+        /// Each face points to an associated half edge
+        /// todo - make it point to the i1->i2 edge, so can canonically check things
+        /// </summary>
+        /// <param name="halfIndex"></param>
+        /// <param name="i1"></param>
+        /// <param name="i2"></param>
+        /// <param name="i3"></param>
+        record FaceData(int halfIndex, int i1, int i2, int i3);
 #endregion
 
     }

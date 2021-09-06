@@ -1,6 +1,7 @@
 ﻿Things to gather from old, other code
 * = done first release
-# added
+# = added in 2nd
+$ = added for third
 
 Groupings:
 
@@ -9,33 +10,42 @@ Base: stuff super common
 Numerical:
     * 3d/lin alg, 
         TODO: check vecs/mats for same funcs: det, deconstruct, etc.
-    quat, svd, more
-    *clamp, wrap, fuzzy close, etc.
-    *lerp, slerp
+        $ added lin interp, more
+    $ quaternion
+    LU, svd, cholesky, more
+    * clamp, wrap, fuzzy close, etc.
+    * lerp, 
+    $ slerp
     * Random number generation
        Rand algos - uniform int, uniform double, fast int, fast double
     solvers (see my GPS code), marching squares (ConvexHullPuzzle), marching cubes
     FFT (anything on my pages!)
+    $ Binomial, Factorial, Multinomial
 
 Geometry:
-    point in poly
-    seg intersects, ray to tri, etc
+    $ point in poly
+    $ seg intersects, ray to tri, etc
     # mesh
     # mesh tools
     polygon, tri, quad, etc
-    geometry, intersection, etc.
+    $ geometry, intersection, etc.
     polyhedra
     AABB
 
 Graphics:
+    $ simple bitmap
     *Color RGB, HSL, more?
     *Color spaces
     Named colors
-    tiny fonts,
     graphics algos (circle, line, ??)
     basic effects (Fire, plasma, hue cycle)
     SSIM
 
+Font:
+    $ Bitmap fonts
+    tiny fonts,
+    font glyphs
+    other font tools
 
 Stats:
     Distributions,
@@ -50,7 +60,9 @@ UI:
 
 
 Container:
-    k-d tree, similar
+    $ k-d tree, similar
+    more containers, see AllRGB for some
+    RRT tree for robotics?
     * Shufflebag
     * Fenwicktree
     tree, graph, directed multigraph? Hypergraph? algos?
@@ -61,18 +73,20 @@ Container:
 Algorithm:
     * DLX algo (needs testing)
     Resevoir sampling
-    combinatorics: *shuffle, *permutations, etc.
+    $ combinatorics: *shuffle, *permutations, etc.
     * string searching stuff
     * DDA
     Fibonacci pseudo rand
     * sort extensions
     * shuffle extension
+    $ Hungarian algorithm for matching problems
 
 Format (file, output)
     # WAV
     * PLY
     # DXF
     GIF
+    PNG
     PPM, PBM
     BMP
     *treedump,
@@ -81,9 +95,12 @@ Format (file, output)
     # bitstream
     PGN?
 
+Networking
+    Simple socket client stuff
+
 Information (TODO - move these around?)
     compression things?
-    *crcs, 
+    *crcs ($ extended and generalized)
     adler checksum? others?
     Constant overhead byte stuffing, other protocols
     error correcting code
@@ -104,17 +121,21 @@ Separate DLLs Win and WPF
 Win
     # RunDll
     * Process control and capture
+    more external win32 calling stuff
 
 WPF
-    mvvm lib (See AllRGB for my code)
-      - viewmodel base
-      - notifiable base
-      - dispatcher
-      - relay command
+    $ mvvm lib (See AllRGB for my code)
+      $- viewmodel base
+      $- notifiable base
+      $- dispatcher
+      $- relay command
+      $ - property observer
+      $ - mediator
     WPF tools
       - controls that are nice (AllRGB for image)
          - pan and zoom image
          - arcball based 3d
+         - data bound items in control draggable viewable
       - converters
       - logger - colored console, message control? in WPF?
 
@@ -128,6 +149,8 @@ giflib?
 profiler,
 GPS code?
 Units?
+make simple 3d and bitmap renderer/viewer app for base of things later
+any extension classes
 
 
 

@@ -1,4 +1,6 @@
 ﻿using System;
+using Lomont.Algorithms;
+using static System.Math;
 
 namespace Lomont.Numerical
 {
@@ -43,6 +45,11 @@ namespace Lomont.Numerical
             y = Y;
             z = Z;
         }
+
+        /// <summary>
+        /// True if all components exactly zero
+        /// </summary>
+        bool IsNull => X == 0 && Y == 0 && Z == 0;
 
         public static Vec3 operator +(Vec3 a, Vec3 b)
         {
@@ -142,23 +149,55 @@ namespace Lomont.Numerical
         /// return unit length in this direction,
         /// or 0,0,0 if already 0
         /// </summary>
-        public Vec3 Normalize()
-        {
+        public Vec3 Normalized()
+        { // todo - merge with Unit versions
             var d = Length;
-            if (Length < 0.000001)
+            if (Length < 1e-6)
                 return new Vec3(0, 0, 0);
             return this * 1.0 / d;
         }
 
         /// <summary>
+        /// make this a unit vector
+        /// or 0,0,0 if already 0
+        /// </summary>
+        public void Normalize()
+        {
+            var d = Length;
+            X /= d;
+            Y /= d;
+            Z /= d;
+        }
+
+
+        /// <summary>
+        /// Linear interpolation from a to b
+        /// TODO - make generic in utility when dotnet adds INumeric
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <param name="t"></param>
+        /// <returns></returns>
+        public static Vec3 LinearInterpolation(Vec3 a, Vec3 b, double t) => a + (b - a) * t;
+
+        /// <summary>
         /// Return angle between vectors in radians
         /// </summary>
         /// <returns></returns>
-        public static double AngleBetween(Vec3 a, Vec3 b)
-        {
-            return System.Math.Acos(Dot(a, b) / (a.Length * b.Length));
-        }
+        public static double AngleBetween(Vec3 a, Vec3 b) => Acos(Dot(a, b) / (a.Length * b.Length));
 
+        /// <summary>
+        /// Return max abs value of a component
+        /// </summary>
+        public double MaxNorm => Max(Abs(X), Max(Abs(Y),Abs(Z)));
+
+        /// <summary>
+        /// Distance between points
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <returns></returns>
+        public static double Distance(Vec3 a, Vec3 b) => (a - b).Length;
 
         /// <summary>
         /// Get a unit normal to the given vector, any one will do
