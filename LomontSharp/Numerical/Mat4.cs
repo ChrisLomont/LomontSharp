@@ -412,7 +412,7 @@ namespace Lomont.Numerical
         /// </summary>
         /// <param name="angle"></param>
         /// <returns></returns>
-        internal static Mat4 XRotation(double angle)
+        public static Mat4 XRotation(double angle)
         {
             var m = new Mat4();
             var c = System.Math.Cos(angle);
@@ -436,12 +436,12 @@ namespace Lomont.Numerical
             return new Mat4(xAxis, yAxis, zAxis, eyePoint);
         }
 
-    /// <summary>
-    /// Create Y rotation matrix with angle in radians
-    /// </summary>
-    /// <param name="angle"></param>
-    /// <returns></returns>
-    internal static Mat4 YRotation(double angle)
+        /// <summary>
+        /// Create Y rotation matrix with angle in radians
+        /// </summary>
+        /// <param name="angle"></param>
+        /// <returns></returns>
+        public static Mat4 YRotation(double angle)
         {
             var m = new Mat4();
             var c = System.Math.Cos(angle);
@@ -459,7 +459,7 @@ namespace Lomont.Numerical
         /// </summary>
         /// <param name="angle"></param>
         /// <returns></returns>
-        internal static Mat4 ZRotation(double angle)
+        public static Mat4 ZRotation(double angle)
         {
             var m = new Mat4();
             var c = System.Math.Cos(angle);

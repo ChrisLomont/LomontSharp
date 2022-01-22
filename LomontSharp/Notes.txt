@@ -3,6 +3,7 @@
 # = added in 2nd
 $ = added for third
 ^ = added for 4th
+% = added 5th
 
 Groupings:
 
@@ -30,7 +31,7 @@ Geometry:
     # mesh tools
     polygon, tri, quad, etc
     $ geometry, intersection, etc.
-    polyhedra
+    % polyhedra
     AABB
 
 Graphics:

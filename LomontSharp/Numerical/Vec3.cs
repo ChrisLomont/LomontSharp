@@ -15,6 +15,9 @@ namespace Lomont.Numerical
             return new Vec3(func(X), func(Y), func(Z));
         }
 
+        public Vec3(Vec3 v) : this(v.X,v.Y,v.Z)
+        {
+        }
 
 
         public double X { get; set; }

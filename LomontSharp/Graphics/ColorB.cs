@@ -11,20 +11,13 @@
 
         public byte Alpha  { get; set; }
 
-        public ColorB(byte red, byte green, byte blue, byte alpha)
+        public ColorB(byte red, byte green, byte blue, byte alpha = 255)
         {
             Red = red;
             Green = green;
             Blue = blue;
             Alpha = alpha;
 
-        }
-        public ColorB(byte red, byte green, byte blue)
-        {
-            Red = red;
-            Green = green;
-            Blue = blue;
-            Alpha = 255;
         }
 
         // todo - add parse, more things from Color
