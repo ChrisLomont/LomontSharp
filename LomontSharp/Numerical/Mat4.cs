@@ -32,6 +32,7 @@ namespace Lomont.Numerical
 
         public Mat4(params double[] vals)
         {
+            Values = new double[4,4];
             if (vals.Length == 0) return;
             var k = 0;
             for (var row = 0; row < 4; ++row)
@@ -41,6 +42,7 @@ namespace Lomont.Numerical
 
         public Mat4(Mat4 m)
         {
+            Values = new double[4, 4];
             for (var row = 0; row < 4; ++row)
             for (var col = 0; col < 4; ++col)
                 Values[row, col] = m[row, col];
@@ -48,6 +50,7 @@ namespace Lomont.Numerical
 
         public Mat4(IEnumerable<double> vals)
         {
+            Values = new double[4, 4];
             vals.Select((v, i) => Values[i / 4, i % 4] = v).ToList();
         }
 
@@ -60,6 +63,7 @@ namespace Lomont.Numerical
         /// <param name="col4"></param>
         public Mat4(Vec3 col1, Vec3 col2, Vec3 col3, Vec3 col4)
         {
+            Values = new double[4, 4];
             var cols = new Vec3[] {col1,col2,col3,col4 };
             for (var r = 0; r < 4; ++r)
             for (var c = 0; c < 4; ++c)
