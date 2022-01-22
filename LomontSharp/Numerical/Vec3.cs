@@ -10,17 +10,6 @@ namespace Lomont.Numerical
     public class Vec3
     {
 
-        public static Vec3 Zero { get; } = new Vec3(0, 0, 0);
-        public static Vec3 One { get; } = new Vec3(1, 1, 1);
-
-        public static Vec3 Origin { get; } = new Vec3(0, 0, 0);
-
-        public static Vec3 XAxis { get; } = new Vec3(1, 0, 0);
-
-        public static Vec3 YAxis { get; } = new Vec3(0, 1, 0);
-
-        public static Vec3 ZAxis { get; } = new Vec3(0, 0, 1);
-
         public Vec3 Map(Func<double, double> func)
         {
             return new Vec3(func(X), func(Y), func(Z));
@@ -191,6 +180,22 @@ namespace Lomont.Numerical
         /// </summary>
         public double MaxNorm => Max(Abs(X), Max(Abs(Y),Abs(Z)));
 
+        public static Vec3 ComponentwiseMin(Vec3 a, Vec3 b)
+        {
+            return Componentwise(a, b, Math.Min);
+
+        }
+        public static Vec3 ComponentwiseMax(Vec3 a, Vec3 b)
+        {
+            return Componentwise(a, b, Math.Max);
+        }
+
+        public static Vec3 Componentwise(Vec3 a, Vec3 b, Func<double, double, double> func)
+        {
+            return new Vec3(func(a.X, b.X), func(a.Y, b.Y), func(a.Z,b.Z));
+        }
+
+
         /// <summary>
         /// Distance between points
         /// </summary>
@@ -249,6 +254,33 @@ namespace Lomont.Numerical
 
             }
         }
+
+        #region Constants
+
+        public static Vec3 Zero { get; } = new Vec3(0, 0, 0);
+        public static Vec3 One { get; } = new Vec3(1, 1, 1);
+
+        public static Vec3 Origin { get; } = new Vec3(0, 0, 0);
+
+        public static Vec3 XAxis { get; } = new Vec3(1, 0, 0);
+
+        public static Vec3 YAxis { get; } = new Vec3(0, 1, 0);
+
+        public static Vec3 ZAxis { get; } = new Vec3(0, 0, 1);
+
+        /// <summary>
+        /// Vector of min values in each slot
+        /// </summary>
+        public static Vec3 Min { get; } = new Vec3(double.MinValue, double.MinValue, double.MinValue);
+
+        /// <summary>
+        /// Vector of max values in each slot
+        /// </summary>
+        public static Vec3 Max { get; } = new Vec3(double.MaxValue, double.MaxValue, double.MaxValue);
+
+
+        #endregion
+
 
         public override string ToString()
         {

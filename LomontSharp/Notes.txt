@@ -2,6 +2,7 @@
 * = done first release
 # = added in 2nd
 $ = added for third
+^ = added for 4th
 
 Groupings:
 
@@ -92,7 +93,7 @@ Format (file, output)
     *treedump,
     * hex dumper
     # ByteWriter
-    # bitstream
+    #,^ bitstream
     PGN?
 
 Networking
@@ -142,7 +143,6 @@ WPF
 
 Unsorted
 anthing utility?
-GPS?
 parsers
 anything used more than once :)
 giflib?
@@ -151,6 +151,7 @@ GPS code?
 Units?
 make simple 3d and bitmap renderer/viewer app for base of things later
 any extension classes
+Make simple MVVM WPF blog post
 
 
 

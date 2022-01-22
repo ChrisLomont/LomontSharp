@@ -1,13 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net6.0</TargetFramework>
-    <Nullable>enable</Nullable>
+    <TargetFramework>net5.0</TargetFramework>
+    <AssemblyName>LomontParser</AssemblyName>
+    <RootNamespace>Lomont.Parser</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\LomontParser\LomontParser.csproj" />
     <ProjectReference Include="..\LomontSharp\LomontSharp.csproj" />
   </ItemGroup>
 

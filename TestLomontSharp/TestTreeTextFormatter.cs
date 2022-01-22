@@ -1,5 +1,6 @@
 ﻿using NUnit.Framework;
 using System.Collections.Generic;
+using System.IO;
 using Lomont.Formats;
 
 namespace TestLomontSharp

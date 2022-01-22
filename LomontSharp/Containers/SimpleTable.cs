@@ -1,11 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
-using Lomont.Graphics;
-using Lomont.Stats;
 
 namespace Lomont.Containers
 {
@@ -15,8 +10,8 @@ namespace Lomont.Containers
     /// <typeparam name="T"></typeparam>
     public class SimpleTable<T>
     {
-        List<string> colNames = new List<string>();
-        List<string> rowNames = new List<string>();
+        List<string> colNames;
+        List<string> rowNames;
 
         public int Rows { get; }
         public int Columns { get; }
@@ -53,7 +48,7 @@ namespace Lomont.Containers
         /// <param name="columnName"></param>
         public T Get(string rowName, string columnName)
         {
-            var row = rowName.IndexOf(rowName);
+            var row = rowNames.IndexOf(rowName);
             var col = colNames.IndexOf(columnName);
             if (row == -1 || col == -1)
                 throw new ArgumentException("Invalid names in SimpleTable");
@@ -68,7 +63,7 @@ namespace Lomont.Containers
         /// <param name="value"></param>
         public void Set(string rowName, string columnName, T value)
         {
-            var row = rowName.IndexOf(rowName);
+            var row = rowNames.IndexOf(rowName);
             var col = colNames.IndexOf(columnName);
             if (row == -1 || col == -1)
                 throw new ArgumentException("Invalid names in SimpleTable");

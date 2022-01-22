@@ -5,6 +5,12 @@
     <Nullable>enable</Nullable>
     <RootNamespace>Lomont.Win</RootNamespace>
     <AssemblyName>LomontWin</AssemblyName>
+    <Version>0.3.0</Version>
+    <Company>Chris Lomont</Company>
+    <Description>Chris Lomont commonly used Win32 components</Description>
+    <Copyright>Copyright Chris Lomont 2020-2021</Copyright>
+    <PackageProjectUrl>https://github.com/ChrisLomont/LomontSharp</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/ChrisLomont/LomontSharp</RepositoryUrl>
   </PropertyGroup>
 
 </Project>

@@ -7,6 +7,10 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 
+var e = new Lomont.Parser.Example.Example();
+e.Test(false);
+Environment.Exit(-1);
+
 //ReflectionHelper.SeekSimilarText();
 //return;
 

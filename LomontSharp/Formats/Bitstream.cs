@@ -1,14 +1,201 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 // todo - all this needs cleaned, merged, tested
 
 namespace Lomont.Formats
 {
+    /// <summary>
+    /// Represent a stream of bits
+    /// </summary>
+    public class BitStream
+    {
+        /* TODO
+         And,Or,Xor,Not bitstreams?
+        shifts, circular shifts
+        allow reverse ordering on reads?
+
+        make a normal C# stream, combinable with other streams (memory, compressed, etc)
+        - get working well, then rewrite to speed up
+
+        see https://www.codeproject.com/Articles/12261/A-BitStream-Class-for-the-NET-Framework
+        ms internal version: https://referencesource.microsoft.com/#PresentationCore/Shared/MS/Internal/Ink/BitStream.cs
+        https://stackoverflow.com/questions/1391984/designing-a-bitstream-in-c-sharp
+        https://github.com/rubendal/BitStream
+
+         */
+
+        // todo - allow ordering definition for how to store internals
+        public BitStream(long byteCapacity)
+        {
+            data = new byte[byteCapacity];
+            BitLength = 0;
+        }
+
+        public BitStream() : this(1)
+        {
+
+        }
+
+        /// <summary>
+        /// Form a BitStream using the given buffer
+        /// The buffer is not cloned, allowing reuse of memory
+        /// </summary>
+        /// <param name="buffer"></param>
+        public BitStream(byte [] buffer)
+        {
+            data = buffer;
+            BitLength = 0;
+        }
+
+        /// <summary>
+        /// Write a bit. 1 if nonzero, 0 if zero
+        /// </summary>
+        /// <param name="bit"></param>
+        public void WriteBit(int bit)
+        {
+            WriteBit(bit!=0);
+        }
+        /// <summary>
+        /// Write a bit
+        /// </summary>
+        /// <param name="bit"></param>
+        public void WriteBit(bool bit)
+        {
+            if (BitLength == data.Length * 8)
+            { // resize 
+                Array.Resize(ref data, (int)(BitLength/8 * 2));
+            }
+
+            var byteIndex = BitLength / 8;
+            var bitIndex = BitLength & 7;
+            var mask = (byte)(1 << bitIndex);
+
+            if (bit)
+                data[byteIndex] |= mask;
+            else 
+                data[byteIndex] &= (byte)~mask;
+            BitLength++;
+        }
+
+        public int ReadBit()
+        {
+            int bitIndex = ReadPosition;
+            var byteIndex = bitIndex / 8;
+            bitIndex = bitIndex & 7;
+            var mask = (byte)(1 << bitIndex);
+            ++ReadPosition;
+            return (data[byteIndex] & mask) != 0 ? 1 : 0;
+        }
+
+        public int ReadBit(int bitIndex)
+        {
+            var byteIndex = bitIndex / 8;
+            bitIndex = bitIndex & 7;
+            var mask = (byte)(1 << bitIndex);
+
+            return (data[byteIndex] & mask) != 0 ? 1 : 0;
+        }
+
+        /// <summary>
+        /// Read 0-64 bits, MSB first
+        /// </summary>
+        /// <param name="bitLength"></param>
+        /// <returns></returns>
+        public ulong ReadBitsMsb(int bitIndex, int bitLength)
+        {
+            if (bitLength <= 0 || bitLength > 64)
+                throw new ArgumentOutOfRangeException("bitLength", bitLength, "Bits out of range 0-64");
+
+            ulong v = 0;
+            for (var i = 0; i < bitLength; ++i)
+                v = (v << 1) + (ulong)ReadBit(bitIndex+i);
+            return v;
+        }
+
+        /// <summary>
+        /// Read 0-64 bits, MSB first
+        /// </summary>
+        /// <param name="bitLength"></param>
+        /// <returns></returns>
+        public ulong ReadBitsMsb(int bitLength)
+        {
+            if (bitLength <= 0 || bitLength > 64)
+                throw new ArgumentOutOfRangeException("bitLength", bitLength, "Bits out of range 0-64");
+
+            ulong v = 0;
+            for (var i = 0; i < bitLength; ++i)
+                v = (v << 1) + (ulong)ReadBit();
+            return v;
+        }
+
+        /// <summary>
+        /// Write 0-64 bits, Msb first
+        /// </summary>
+        /// <param name="value"></param>
+        /// <param name="bitLength"></param>
+        public void WriteBitsMsb(ulong value, int bitLength)
+        {
+            for (var i = 0; i < bitLength; ++i)
+            {
+                var vs = value >> (bitLength - 1);
+                WriteBit((int)(vs&1));
+                value <<= 1;
+            }
+        }
+
+        /// <summary>
+        /// Pad to next multiple. Commonly pad to multiple of 8, or 32, etc.
+        /// Default to 0 pad, can 1 pad also
+        /// </summary>
+        /// <param name="multiple"></param>
+        public void Pad(int multiple, int padValue = 0)
+        {
+            padValue &= 1;
+            var excess = BitLength % multiple;
+            var padding = (multiple - excess) % multiple;
+            while (padding-->0)
+                WriteBit(padValue);
+        }
+
+        /// <summary>
+        ///  The data buffer, can read/write into a stream
+        /// </summary>
+        public byte[] Data => data;
+
+        public int BitLength { get; private set; }
+
+        public int ReadPosition { get; set; }
+
+        // todo - make some read position
+        // public long Position;
+
+        #region Implementation
+
+        byte[] data;
+
+        #endregion
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            sb.Append($"{BitLength}: ");
+            for (var i = 0; i < BitLength; ++i)
+                sb.Append(ReadBit(i));
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Clear stream
+        /// </summary>
+        public void Clear()
+        {
+            data = new byte[1];
+            BitLength = 0;
+        }
+
+
+
+    }
 #if false
     /// <summary>
     /// Read or write values to a stream of bits
