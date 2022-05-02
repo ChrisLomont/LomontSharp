@@ -82,6 +82,15 @@ namespace TestLomontSharp
             //);
         }
 
+        [Test]
+        public void Test24Q()
+        {
+            var check = "123456789";
+            var checkBytes = ASCIIEncoding.ASCII.GetBytes(check);
+            var crc24 = CRC.CRC_24Q(checkBytes);
+            Assert.AreEqual(crc24, 0x00CDE703);
+        }
+
         // [Test]
         public void Test16()
         {

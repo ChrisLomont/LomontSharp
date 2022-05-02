@@ -339,7 +339,7 @@ namespace Lomont.Information
         /// 4. larger bursts with false positive rate less than or equal to 2^-23
         /// </summary>
         /// <returns></returns>
-        public static uint CRC_24Q(ReadOnlySpan<byte> buffer) => CRC32ByTable(buffer, 24, 0U, 0U, true, true, Crc24QTable) & 0x00_FF_FFFF;
+        public static uint CRC_24Q(ReadOnlySpan<byte> buffer) => CRC32ByTable(buffer, 24, 0U, 0U, false, false, Crc24QTable) & 0x00_FF_FFFF;
 
         // region CRC24
         #endregion
