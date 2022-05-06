@@ -15,7 +15,7 @@ namespace TestLomontSharp
         }
 
         [Test]
-        public void Test1()
+        public void TestRotation()
         {
             // check rotation orientations are right handed 
             // (positive angle is counterclockwise looking down the rotation axis)
@@ -31,9 +31,18 @@ namespace TestLomontSharp
             var t3 = (Mat4.ZRotation(angle) * Vec3.XAxis - Vec3.YAxis).Length; 
             Assert.True(t3 < tolerance);
 
-
-
         }
 
+        [Test]
+        public void TestTranslation()
+        {
+            var m1 = Mat4.Translation(new Vec3(1, 2, 3));
+            var ans1 = m1 * new Vec3(4, 6, 11);
+            Assert.AreEqual((new Vec3(5, 8, 14) - ans1).Length,0.0); // should be identical, no float error here
+
+            var m2 = Mat4.Translation(1,2,3);
+            var ans2 = m2 * new Vec3(7, 2, -1);
+            Assert.AreEqual((new Vec3(8, 4, 2) - ans2).Length, 0.0); // should be identical, no float error here
+        }
     }
 }
