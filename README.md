@@ -56,6 +56,7 @@ Much more listed in the code TODO section. I have decades of code to pull pieces
 
 
 ## History
+Release 0.4 - 5/06/2022 - 
 
 Release 0.3 - 9/06/2021 - Added quaternions, slerp, binomial coefficients, factorial, multinomial, point in polygon, segment intersections, more geometry stuff, simple bitmaps, bitmap fonts, Hungarian algorithm for matching problems, kd-tree, nicer CRCs, mvvm lib
 

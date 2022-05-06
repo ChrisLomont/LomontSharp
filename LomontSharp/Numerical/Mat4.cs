@@ -129,13 +129,20 @@ namespace Lomont.Numerical
             return m;
         }
 
+        /// <summary>
+        /// Multiply 3-vector by 4-matrix, treating as a transform.
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <returns></returns>
         public static Vec3 operator *(Mat4 a, Vec3 b)
         {
-            var v = new Vec3(0, 0, 0);
-            for (var i = 0; i < 4; ++i)
-            for (var j = 0; j < 4; ++j)
-                v[i] += a[i, j] * b[j];
-            return v;
+            // treat 3 vector as 4 vector with 1 component in last spot
+            var x = a[0, 0] * b[0] + a[0, 1] * b[1] + a[0, 2] * b[2] + a[0, 3];
+            var y = a[1, 0] * b[0] + a[1, 1] * b[1] + a[1, 2] * b[2] + a[1, 3];
+            var z = a[2, 0] * b[0] + a[2, 1] * b[1] + a[2, 2] * b[2] + a[2, 3];
+            var w = a[3, 0] * b[0] + a[3, 1] * b[1] + a[3, 2] * b[2] + a[3, 3];
+            return new Vec3(x / w, y / w, z / w);
         }
 
         /// <summary>
@@ -422,8 +429,8 @@ namespace Lomont.Numerical
             var c = System.Math.Cos(angle);
             var s = System.Math.Sin(angle);
             m[1, 1] = c;
-            m[1, 2] = s;
-            m[2, 1] = -s;
+            m[1, 2] = -s;
+            m[2, 1] = s;
             m[2, 2] = c;
             m[3, 3] = 1;
             return m;
@@ -470,8 +477,8 @@ namespace Lomont.Numerical
             var s = System.Math.Sin(angle);
             m[0, 0] = c;
             m[1, 1] = c;
-            m[0, 1] = s;
-            m[1, 0] = -s;
+            m[0, 1] = -s;
+            m[1, 0] = s;
             m[3, 3] = 1;
             return m;
         }
