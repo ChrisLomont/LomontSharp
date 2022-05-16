@@ -48,6 +48,17 @@ namespace Lomont.Numerical
                 Values[row, col] = m[row, col];
         }
 
+        // from mat 3x3, puts 1 in 3,3 spot to make invertible
+        public Mat4(Mat3 m)
+        {
+            Values = new double[4, 4];
+            for (var row = 0; row < 3; ++row)
+                for (var col = 0; col < 3; ++col)
+                    Values[row, col] = m[row, col];
+            Values[3, 3] = 1;
+        }
+
+
         public Mat4(IEnumerable<double> vals)
         {
             Values = new double[4, 4];
@@ -131,6 +142,7 @@ namespace Lomont.Numerical
 
         /// <summary>
         /// Multiply 3-vector by 4-matrix, treating as a transform.
+        /// Performs homogeneous multiplication
         /// </summary>
         /// <param name="a"></param>
         /// <param name="b"></param>
@@ -162,7 +174,7 @@ namespace Lomont.Numerical
         }
 
         /// <summary>
-        ///     Create a matrix that scales x,y,z by the given factor
+        /// Create a matrix that scales x,y,z by the given factor
         /// </summary>
         /// <param name="scale"></param>
         /// <returns></returns>
@@ -201,7 +213,7 @@ namespace Lomont.Numerical
         }
 
         /// <summary>
-        ///     Get the determinant of this matrix
+        /// Get the determinant of this matrix
         /// </summary>
         public double Det
         {
@@ -569,6 +581,17 @@ namespace Lomont.Numerical
         }
 
         #endregion
+
+        // extract upper left 3x3
+        public Mat3 ToMat3()
+        {
+            var m = new Mat3();
+            for (var i = 0; i < 3; ++i)
+                for (var j = 0; j < 3; ++j)
+                    m[i, j] = this[i, j];
+            return m;
+        }
+
 
         /// <summary>
         /// Create a matrix that rotates the first 3D frame into the second 3D frame.

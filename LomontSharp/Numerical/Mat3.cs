@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 
 namespace Lomont.Numerical
 {
@@ -13,6 +14,24 @@ namespace Lomont.Numerical
         /// </summary>
         public double[,] Values { get; set; }
 
+        public static Mat3 Identity { get; } =
+            new Mat3(
+                1, 0, 0, 
+                0, 1, 0, 
+                0, 0, 1
+            );
+
+        public static Mat3 Zero { get; } =
+            new Mat3(
+                0, 0, 0, 
+                0, 0, 0, 
+                0, 0, 0
+            );
+
+
+        /// <summary>
+        /// Get matrix, defaults to identity
+        /// </summary>
         public Mat3()
         {
             Values = new double[3, 3];
@@ -20,6 +39,21 @@ namespace Lomont.Numerical
                 Values[i, i] = 1; // identity matrix
         }
 
+        // from values, row at a time
+        public Mat3(params double[] vals)
+        {
+            Values = new double[3, 3];
+            if (vals.Length == 0) return;
+            var k = 0;
+            for (var row = 0; row < 3; ++row)
+                for (var col = 0; col < 3; ++col)
+                    Values[row, col] = vals[k++];
+        }
+
+        /// <summary>
+        /// Constant value matrix
+        /// </summary>
+        /// <param name="val"></param>
         public Mat3(double val)
         {
             Values = new double[3, 3];
@@ -78,11 +112,22 @@ namespace Lomont.Numerical
         public static Vec2 operator *(Mat3 a, Vec2 b)
         {
             var v = new Vec2(0, 0);
-            for (var i = 0; i < 3; ++i)
+            for (var i = 0; i < 2; ++i)
             for (var j = 0; j < 3; ++j)
                 v[i] += a[i, j] * b[j];
             return v;
         }
+        
+        public static Vec3 operator *(Mat3 a, Vec3 b)
+        {
+            var v = new Vec3(0, 0,0);
+            for (var i = 0; i < 3; ++i)
+                for (var j = 0; j < 3; ++j)
+                    v[i] += a[i, j] * b[j];
+            return v;
+        }
+
+
 
         public static Mat3 operator +(Mat3 a, Mat3 b)
         {
@@ -125,6 +170,16 @@ namespace Lomont.Numerical
             var m = new Mat3 { [0, 0] = c, [0, 1] = -s, [1, 0] = s, [1, 1] = c };
             return m;
         }
+
+        public static Mat3 operator -(Mat3 a, Mat3 b)
+        {
+            var m = new Mat3();
+            for (var i = 0; i < 3; ++i)
+                for (var j = 0; j < 3; ++j)
+                    m[i, j] = a[i, j] - b[i, j];
+            return m;
+        }
+
 
 #if true
 
@@ -169,6 +224,90 @@ namespace Lomont.Numerical
 
             return t2 * rot * t1;
         }
+
+        /// <summary>
+        /// Convert to rotation vector.
+        /// Assumes matrix is a rotation.
+        /// Rotation Vector is a vector with axis the axis of rotation
+        /// and length the rotation angle in radians.
+        /// </summary>
+        /// <returns></returns>
+        public Vec3 ToRotationVector()
+        {
+            var q = Quat.FromRotationMatrix(this);
+            var (u,a) = q.ToAxisAngle();
+            return a * u;
+        }
+
+        /// <summary>
+        /// Convert a rotation vector to a rotation matrix
+        /// </summary>
+        /// <param name="v"></param>
+        /// <returns></returns>
+        public static Mat3 FromRotationVector(Vec3 v) => 
+            Quat.FromAxisAngle(v.Unit(), v.Length).ToRotationMatrix();
+
+
+        /// <summary>
+        /// Get the determinant of this matrix
+        /// </summary>
+        public double Det
+        {
+            get
+            { // cofactor expansion
+                var m = this;
+                return
+                    m[0, 0] * (m[1, 1] * m[2, 2] - m[2, 1] * m[1, 2]) -
+                    m[0, 1] * (m[1, 0] * m[2, 2] - m[1, 2] * m[2, 0]) +
+                    m[0, 2] * (m[1, 0] * m[2, 1] - m[1, 1] * m[2, 0]);
+            }
+        }
+        public Mat3 Invert()
+        {
+            var m = this;
+            return new Mat3(
+                m[1, 1] * m[2, 2] - m[2, 1] * m[1, 2],
+                m[0, 2] * m[2, 1] - m[0, 1] * m[2, 2],
+                m[0, 1] * m[1, 2] - m[0, 2] * m[1, 1],
+                m[1, 2] * m[2, 0] - m[1, 0] * m[2, 2],
+                m[0, 0] * m[2, 2] - m[0, 2] * m[2, 0],
+                m[1, 0] * m[0, 2] - m[0, 0] * m[1, 2],
+                m[1, 0] * m[2, 1] - m[2, 0] * m[1, 1],
+                m[2, 0] * m[0, 1] - m[0, 0] * m[2, 1],
+                m[0, 0] * m[1, 1] - m[1, 0] * m[0, 1]
+            ) * (1.0 / Det);
+        }
+
+        /// <summary>
+        /// Given rotation vector, compute
+        /// the rotation matrix for the exponential map
+        /// </summary>
+        /// <param name="omega"></param>
+        /// <returns></returns>
+        public static Mat3 RotationExp(Vec3 omega)
+        {
+            var angle = omega.Length; // Frobenius 2 norm
+                                      // near phi==0, use first order Taylor expansion
+            if (angle < 1e-10)
+                return Identity + Vec3.CrossOperator(omega); // I + {}
+            var axis = omega / angle;
+            var s = Math.Sin(angle);
+            var c = Math.Cos(angle);
+
+            // rotation formula
+            return c * Identity + (1 - c) * Vec3.Outer(axis, axis) + s * Vec3.CrossOperator(axis);
+        }
+
+
+        public double MaxNorm()
+        {
+            var norm = 0.0;
+            for (var i = 0; i < 3; ++i)
+                for (var j = 0; j < 3; ++j)
+                    norm = System.Math.Max(norm, System.Math.Abs(Values[i, j]));
+            return norm;
+        }
+
 
 #if false
         /// <summary>

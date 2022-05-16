@@ -42,7 +42,7 @@ namespace Lomont.Numerical
         /// Cast to rotation matrix
         /// </summary>
         /// <param name="q"></param>
-        public static explicit operator Mat4(Quat q) => q.ToRotationMatrix();
+        public static explicit operator Mat4(Quat q) => new Mat4(q.ToRotationMatrix());
 
 
         /// <summary>
@@ -273,7 +273,7 @@ namespace Lomont.Numerical
 
         #endregion
 
-        #region quat algebra
+        #region Quat algebra
 
         /// <summary>
         /// Quat inverse (two sided)
@@ -345,7 +345,7 @@ namespace Lomont.Numerical
         }
         #endregion
 
-        #region rotations
+        #region Rotations
 
         /// <summary>
         /// Rotate vector by this quat
@@ -535,23 +535,33 @@ namespace Lomont.Numerical
         /// Convert quat to rotation matrix
         /// </summary>
         /// <returns></returns>
-        public Mat4 ToRotationMatrix()
+        public Mat3 ToRotationMatrix()
         {
             var u = Normalized();
-            return new Mat4(
-                1 - 2 * u.Y * u.Y - 2 * u.Z * u.Z, 2 * u.X * u.Y - 2 * u.Z * u.W, 2 * u.X * u.Z + 2 * u.Y * u.W, 0,
-                2 * u.X * u.Y + 2 * u.Z * u.W, 1 - 2 * u.X * u.X - 2 * u.Z * u.Z, 2 * u.Y * u.Z - 2 * u.X * u.W, 0,
-                2 * u.X * u.Z - 2 * u.Y * u.W, 2 * u.Y * u.Z + 2 * u.X * u.W, 1 - 2 * u.X * u.X - 2 * u.Y * u.Y, 0,
-                0, 0, 0, 1);
+            return new Mat3(
+                1 - 2 * u.Y * u.Y - 2 * u.Z * u.Z, 2 * u.X * u.Y - 2 * u.Z * u.W, 2 * u.X * u.Z + 2 * u.Y * u.W,
+                2 * u.X * u.Y + 2 * u.Z * u.W, 1 - 2 * u.X * u.X - 2 * u.Z * u.Z, 2 * u.Y * u.Z - 2 * u.X * u.W,
+                2 * u.X * u.Z - 2 * u.Y * u.W, 2 * u.Y * u.Z + 2 * u.X * u.W, 1 - 2 * u.X * u.X - 2 * u.Y * u.Y
+                );
         }
+        /// <summary>
+        /// Convert quat to rotation matrix as 4x4
+        /// </summary>
+        /// <returns></returns>
+        public Mat4 ToRotationMatrix4() => new Mat4(ToRotationMatrix());
+
+        [Obsolete]
+        public static Quat GetRotation(Mat4 m) => FromRotationMatrix(m);
+
+        public static Quat FromRotationMatrix(Mat4 m) => FromRotationMatrix(m.ToMat3());
 
         /// <summary>
-        /// Get rotation from matrix, which is really the 3x3 upper left submatrix
+        /// Get rotation from matrix
         /// Assumes orthogonal
         /// </summary>
         /// <param name="m"></param>
         /// <returns></returns>
-        public static Quat GetRotation(Mat4 m)
+        public static Quat FromRotationMatrix(Mat3 m)
         {
             double m00 = m[0, 0], m01 = m[0, 1], m02 = m[0, 2];
             double m10 = m[1, 0], m11 = m[1, 1], m12 = m[1, 2];

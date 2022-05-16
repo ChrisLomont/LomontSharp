@@ -5,6 +5,7 @@ using System.IO.Pipes;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Lomont.Numerical;
 using NUnit.Framework;
 using static Lomont.Numerical.Utility;
 
@@ -143,6 +144,43 @@ namespace TestLomontSharp
                 var nCk = Binomial(n,k);
                 Assert.AreEqual(ans[n+2][k+2],nCk);
             }
+        }
+
+        [Test]
+        public void TestBestFitPlane()
+        {
+            // pick points on plane
+            // nx * x + ny * y + nz * z + d = 0
+
+            var dir = new Vec3(1,2,3);
+            var n1 = dir.Unit(); // normal
+            var p1 = new Vec3(3, 5, 7); // point on plane
+
+            // point q on plane iff
+            // n.(p-q) = 0
+            // n.p == n.q
+            // qz = (n.p-nx*qx-ny*qy)/nz
+
+            var r = new Random(1234);
+            var pts = new List<Vec3>();
+            for (var i =0; i < 100; ++i)
+            {
+                var x = (double)r.Next(-100, 100);
+                var y = (double)r.Next(-100, 100);
+                var z = (Vec3.Dot(n1,p1)-n1.X*x - n1.Y*y)/n1.Z;
+
+                pts.Add(new Vec3(x,y,z));
+            }
+
+            var (n2,p2) = Lomont.Geometry.Utility.BestFitPlane(pts);
+
+            Console.WriteLine($"{n1}  {n2}");
+
+            if ((n2 - n1).Length > 0.1)
+                n2 = -n2; // recerse normal
+            Assert.True((n1 - n2).Length < 0.000001);
+            Assert.True(Vec3.Dot(n1, p1 - p2) < 0.0001); // point on plane
+            Assert.True(Vec3.Dot(n2, p1 - p2) < 0.0001); // point on plane
         }
     }
 }

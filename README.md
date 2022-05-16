@@ -56,6 +56,8 @@ Much more listed in the code TODO section. I have decades of code to pull pieces
 
 
 ## History
+Release 0.6 - 5/16/2022 - Added singular value decomposition for 3xn, added best fit plane, lots of mat3/vec3/mat4/rotation helpers.
+
 Release 0.5 - 5/06/2022 - Fixed some matrix math problems, fixed CRC24Q, added polyhedra, misc fixes
 
 Release 0.4 - ??

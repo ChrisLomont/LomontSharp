@@ -8,7 +8,7 @@ namespace Lomont.Geometry
 {
     public static class Utility
     {
-        // todo - orgainze this file better
+        // todo - organize this file better
 
         // get normal to triangle
         public static Vec3 Normal(Vec3 p0, Vec3 p1, Vec3 p2)
@@ -568,6 +568,58 @@ namespace Lomont.Geometry
                 return (false, Numerical.Vec3.Zero, 0);
 
             return (true, rayOrigin + n * t, t);
+        }
+
+
+        /// <summary>
+        /// compute the best fit plane for a cloud of points
+        /// returns a point on the plane and a unit normal vector to the plane
+        /// note the normal is not unique: it can be +- of the same vector
+        /// </summary>
+        /// <param name="points"></param>
+        /// <param name="normal"></param>
+        /// <param name="planePoint"></param>
+        public static (Vec3 normal, Vec3 pointOnPlane) BestFitPlane(IList<Vec3> points)
+        {
+            // uses the algorithms covered at:
+            // https://math.stackexchange.com/questions/99299/best-fitting-plane-given-a-set-of-points
+            // http://www.janssenprecisionengineering.com/downloads/Fit-plane-through-data-points.pdf
+            // Simple algorithm
+            // https://www.ilikebigbits.com/2015_03_04_plane_from_points.html
+
+            var n = points.Count;
+            if (n < 3)
+                return (new Vec3(0, 0, 1), new Vec3());
+
+            // compute centroid
+            var sum = new Vec3();
+            foreach (var c in points)
+                sum += c;
+            var centroid = sum / n;
+            var (xc, yc, zc) = centroid;
+
+            // make 3xn matrix of n points
+            var mat = new Matrix(3, n);
+            // compute matrix, moving points to centroid for stability
+            for (var i = 0; i < n; ++i)
+            {
+                mat[0, i] = points[i ].X - xc;
+                mat[1, i] = points[i ].Y - yc;
+                mat[2, i] = points[i ].Z - zc;
+            }
+
+            // singular value decomposition
+            var svd = new SingularValueDecomposition(mat);
+            // todo - check svd.Condition number is nice
+
+            // singular vectors, needed to make U public in Mapack library
+            var nx = svd.U[0, 2];
+            var ny = svd.U[1, 2];
+            var nz = svd.U[2, 2];
+
+            var normal = new Vec3(nx, ny, nz).Normalized();
+            var planePoint = new Vec3(xc, yc, zc);
+            return (normal, planePoint);
         }
 
 

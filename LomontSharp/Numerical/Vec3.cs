@@ -80,9 +80,39 @@ namespace Lomont.Numerical
             return new Vec3(x, y, z);
         }
 
+        /// <summary>
+        /// Create a matrix that operates on a vector like the corss product.
+        /// Often called hat operator, or cross operator
+        /// </summary>
+        /// <param name="a"></param>
+        /// <returns></returns>
+        public static Mat3 CrossOperator(Vec3 v)
+        {
+            return new Mat3(
+                0, -v.Z, v.Y, 
+                v.Z, 0, -v.X, 
+                -v.Y, v.X, 0
+                );
+        }
+
         public static double Dot(Vec3 a, Vec3 b)
         {
             return a.X * b.X + a.Y * b.Y + a.Z * b.Z;
+        }
+
+        /// <summary>
+        /// Outer product of vectors
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <returns></returns>
+        public static Mat3 Outer(Vec3 a, Vec3 b)
+        {
+            return new Mat3(
+                a.X * b.X, a.X * b.Y, a.X * b.Z,
+                a.Y * b.X, a.Y * b.Y, a.Y * b.Z,
+                a.Z * b.X, a.Z * b.Y, a.Z * b.Z
+                );
         }
 
 
