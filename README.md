@@ -56,14 +56,16 @@ Much more listed in the code TODO section. I have decades of code to pull pieces
 
 
 ## History
-Release 0.6 - 5/16/2022 - Added singular value decomposition for 3xn, added best fit plane, lots of mat3/vec3/mat4/rotation helpers.
+Release 0.6.1 - 5/19/2022 - bug fixes, more rotation vector support, quaternion metrics
 
-Release 0.5 - 5/06/2022 - Fixed some matrix math problems, fixed CRC24Q, added polyhedra, misc fixes
+Release 0.6   - 5/16/2022 - Added singular value decomposition for 3xn, added best fit plane, lots of mat3/vec3/mat4/rotation helpers.
 
-Release 0.4 - ??
+Release 0.5   - 5/06/2022 - Fixed some matrix math problems, fixed CRC24Q, added polyhedra, misc fixes
 
-Release 0.3 - 9/06/2021 - Added quaternions, slerp, binomial coefficients, factorial, multinomial, point in polygon, segment intersections, more geometry stuff, simple bitmaps, bitmap fonts, Hungarian algorithm for matching problems, kd-tree, nicer CRCs, mvvm lib
+Release 0.4   - ??
 
-Release 0.2 - 8/23/2021 - Added things marked (#)
+Release 0.3   - 9/06/2021 - Added quaternions, slerp, binomial coefficients, factorial, multinomial, point in polygon, segment intersections, more geometry stuff, simple bitmaps, bitmap fonts, Hungarian algorithm for matching problems, kd-tree, nicer CRCs, mvvm lib
 
-Release 0.1 - 8/19/2021 - Initial release
+Release 0.2   - 8/23/2021 - Added things marked (#)
+
+Release 0.1   - 8/19/2021 - Initial release

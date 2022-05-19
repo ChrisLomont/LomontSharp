@@ -244,8 +244,8 @@ namespace Lomont.Numerical
         /// </summary>
         /// <param name="v"></param>
         /// <returns></returns>
-        public static Mat3 FromRotationVector(Vec3 v) => 
-            Quat.FromAxisAngle(v.Unit(), v.Length).ToRotationMatrix();
+        public static Mat3 FromRotationVector(Vec3 v) =>
+            v.Length > 1e-8 ? Quat.FromAxisAngle(v.Unit(), v.Length).ToRotationMatrix() : Mat3.Identity;
 
 
         /// <summary>

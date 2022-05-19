@@ -111,6 +111,10 @@ namespace TestLomontSharp
 
             //var v = rx.ToRotationVector();
             //Assert.True((v - Vec3.XAxis * Math.PI).Length < 0.0001);
+
+            var r0 = Mat3.FromRotationVector(Vec3.Zero); // should be identity
+            Assert.True((r0-Mat3.Identity).MaxNorm() < 0.00001);
+
         }
 
         [Test]

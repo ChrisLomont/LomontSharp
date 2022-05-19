@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <AssemblyName>LomontSharp</AssemblyName>
     <RootNamespace>Lomont</RootNamespace>
-    <Version>0.5.0</Version>
+    <Version>0.6.1</Version>
     <Authors>Chris Lomont</Authors>
     <Description>Chris Lomont commonly used components</Description>
     <Copyright>Copyright Chris Lomont 2020-2022</Copyright>

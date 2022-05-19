@@ -1,5 +1,4 @@
 ﻿using System;
-using Microsoft.VisualBasic.CompilerServices;
 using static Lomont.Numerical.Utility;
 using static System.Math;
 
@@ -310,7 +309,7 @@ namespace Lomont.Numerical
         /// <param name="q1"></param>
         /// <param name="q2"></param>
         /// <returns></returns>
-        public static double Dot(Quat q1, Quat q2) => q1.A * q2.A + q1.B * q2.B + q1.C * q2.C + q1.D * q1.D;
+        public static double Dot(Quat q1, Quat q2) => q1.A * q2.A + q1.B * q2.B + q1.C * q2.C + q1.D * q2.D;
 
 
         #endregion
@@ -601,12 +600,99 @@ namespace Lomont.Numerical
             q *= 0.5 / Sqrt(t);
             return q.Normalized();
         }
+
+        /// <summary>
+        /// Make a quat from a rotation vector
+        /// </summary>
+        /// <param name="v"></param>
+        /// <returns></returns>
+        public static Quat FromRotationVector(Vec3 v) => v.Length > 1e-10 ?  FromAxisAngle(v.Unit(),v.Length) : new Quat();
+
+        /// <summary>
+        /// Convert to a rotation vector
+        /// </summary>
+        /// <param name="v"></param>
+        /// <returns></returns>
+        public Vec3 ToRotationVector()
+        {
+            var (u, a) = ToAxisAngle();
+            return a * u;
+        }
+
+        #endregion
+
+        #region Error Differences
+        // see paper "Metrics for 3D Rotations: Comparison and Analysis", 2009, Du Hunyh, https://www.cs.cmu.edu/~cga/dynopt/readings/Rmetric.pdf
+        // also https://users.cecs.anu.edu.au/~hartley/Papers/PDF/Hartley-Trumpf:Rotation-averaging:IJCV.pdf
+
+
+        /// <summary>
+        /// Angle between quaternions (a useful orientation error metric) in 0 to pi
+        /// </summary>
+        /// <param name="q1"></param>
+        /// <param name="q2"></param>
+        /// <returns></returns>
+        public static double AngleBetween(Quat q1, Quat q2)
+        {
+            var d = Dot(q1, q2);
+            var m = 2 * d * d - 1;
+            m = Math.Clamp(m, -1, 1); // needed due to numerical noise
+
+            var a = Math.Acos(m); // in 0 to pi
+            return a;
+        }
+
+#if false // todo - flesh these out
+        /// <summary>
+        /// Angle between quaternions (a useful orientation error metric) in 0 to pi
+        /// </summary>
+        /// <param name="q1"></param>
+        /// <param name="q2"></param>
+        /// <returns></returns>
+        public static double AngleBetween2(Quat q1, Quat q2)
+        {
+            var m1 = q1.ToRotationMatrix();
+            var m2 = q2.ToRotationMatrix();
+            var m3 = m1 * m2.Transpose(); // another rotation
+
+            var v1 = m3.ToRotationVector(); // rotation vector: is a direction and an angle
+            return v1.Length; // the angle rotated through
+        }
+
+        /// <summary>
+        /// Compute orientation error as the length of shortest geodesic on unit rotation space
+        /// // todo - move to library
+        /// </summary>
+        /// <param name="q1"></param>
+        /// <param name="q2"></param>
+        /// <returns></returns>
+        public static double OrientationError(Quat q1, Quat q2)
+        {
+            //var l1 = q1.Length;
+            //var l2 = q2.Length;
+            //var a = q1 * q2;
+            //var l = a.Length;
+            //Quat.Dot(q1.q2)
+            return 2 * Math.Acos((q1 * q2).Length); // todo - use dot product? not mult?
+        }
+
+
+        /// <summary>
+        /// Length of Euclidean difference of quats (min of two equivalent orientations)
+        /// </summary>
+        /// <param name="q1"></param>
+        /// <param name="q2"></param>
+        /// <returns></returns>
+        public static double NormDifference(Quat q1, Quat q2) => Math.Min((q1 + q2).Length, (q1 - q2).Length);
+
+#endif
+
         #endregion
 
         #region Formatting
         public override string ToString() => $"({A},{B},{C},{D})";
 
-        #endregion
+#endregion
 
     }
 }
