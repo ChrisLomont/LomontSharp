@@ -80,7 +80,7 @@ namespace Lomont.Formats
             }
 
             // helpers
-            byte[] UcharToByteArray(byte n) => BitConverter.GetBytes((byte)(n));
+            byte[] UcharToByteArray(byte n) => new byte[] {n};// BitConverter.GetBytes((byte)(n));
             byte[] Int32ToByteArray(int n) => BitConverter.GetBytes(n);
             byte[] Float32ToByteArray(float value) => BitConverter.GetBytes(value);
             //byte[] StringToByteArray(string theString) => System.Text.Encoding.ASCII.GetBytes(theString);

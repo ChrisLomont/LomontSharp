@@ -1,13 +1,19 @@
 ﻿using System;
-using Lomont.Algorithms;
 using static System.Math;
+using System.Numerics;
 
 namespace Lomont.Numerical
 {
     /// <summary>
     /// Represent a 3D vector
     /// </summary>
-    public class Vec3
+    public class Vec3 :
+        // basic generic support
+        IAdditiveIdentity<Vec3, Vec3>,
+        IAdditionOperators<Vec3, Vec3, Vec3>,
+        ISubtractionOperators<Vec3, Vec3, Vec3>,
+        IMultiplyOperators<Vec3, double, Vec3>,
+        IDistance<Vec3, Vec3, double>
     {
 
         public Vec3 Map(Func<double, double> func)
@@ -314,6 +320,26 @@ namespace Lomont.Numerical
 
         #endregion
 
+
+        #region Generic
+        public static Vec3 AdditiveIdentity => Vec3.Zero;
+
+        public static Vec3 operator checked +(Vec3 left, Vec3 right)
+        {
+            return left + right;
+        }
+
+        public static Vec3 operator checked -(Vec3 left, Vec3 right)
+        {
+            return left - right;
+        }
+
+        public static Vec3 operator checked *(Vec3 left, double right)
+        {
+            return left * right;
+        }
+
+        #endregion
 
         public override string ToString()
         {

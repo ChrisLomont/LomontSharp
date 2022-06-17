@@ -1,11 +1,19 @@
 ﻿using System;
+using System.Numerics;
 
 namespace Lomont.Numerical
 {
     /// <summary>
     /// Represent a 2D vector
     /// </summary>
-    public class Vec2
+    public class Vec2 :
+        // basic generic support
+        IAdditiveIdentity<Vec2, Vec2>,
+        IAdditionOperators<Vec2, Vec2, Vec2>,
+        ISubtractionOperators<Vec2, Vec2, Vec2>,
+        IMultiplyOperators<Vec2, double, Vec2>,
+        IDistance<Vec2, Vec2, double>
+
     {
         public double X { get; set; }
         public double Y { get; set; }
@@ -93,6 +101,14 @@ namespace Lomont.Numerical
         }
 
         /// <summary>
+        /// Distance between points
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <returns></returns>
+        public static double Distance(Vec2 a, Vec2 b) => (a - b).Length;
+
+        /// <summary>
         /// Return angle between vectors in radians
         /// </summary>
         /// <returns></returns>
@@ -151,9 +167,31 @@ namespace Lomont.Numerical
             return new Vec2(func(a.X, b.X), func(a.Y, b.Y));
         }
 
+        #region Generic
+        public static Vec2 AdditiveIdentity => Vec2.Zero;
+        public static Vec2 operator checked +(Vec2 left, Vec2 right)
+        {
+            return left + right;
+        }
+
+        public static Vec2 operator checked -(Vec2 left, Vec2 right)
+        {
+            return left - right;
+        }
+
+        public static Vec2 operator checked *(Vec2 left, double right)
+        {
+            return left * right;
+        }
+
+        #endregion
+
+
         #region Constants
 
         public static Vec2 Origin { get; } = new Vec2(0, 0);
+
+        public static Vec2 Zero { get; } = new Vec2(0, 0);
 
         public static Vec2 XAxis { get; } = new Vec2(1, 0);
 

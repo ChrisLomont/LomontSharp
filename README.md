@@ -56,6 +56,8 @@ Much more listed in the code TODO section. I have decades of code to pull pieces
 
 
 ## History
+Release 0.6.2 - 6/17/2022 - added b-spline support, moved to dotnet 7.0 preview, added some INumeric generic math support.
+
 Release 0.6.1 - 5/19/2022 - bug fixes, more rotation vector support, quaternion metrics
 
 Release 0.6   - 5/16/2022 - Added singular value decomposition for 3xn, added best fit plane, lots of mat3/vec3/mat4/rotation helpers.
