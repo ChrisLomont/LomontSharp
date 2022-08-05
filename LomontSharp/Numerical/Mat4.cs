@@ -19,6 +19,14 @@ namespace Lomont.Numerical
                 0, 0, 0, 1
             );
 
+        public static Mat4 Zero { get; } =
+            new Mat4(
+                0, 0, 0, 0,
+                0, 0, 0, 0,
+                0, 0, 0, 0,
+                0, 0, 0, 0
+            );
+
 
         /// <summary>
         /// Matrix. Default to identity
@@ -86,6 +94,8 @@ namespace Lomont.Numerical
             }
         }
 
+        public double Trace => Values[0, 0] + Values[1, 1] + Values[2, 2] + Values[3, 3];
+
 
         public Mat4 Inverse()
         {
@@ -94,6 +104,54 @@ namespace Lomont.Numerical
             return m;
         }
 
+        /// <summary>
+        /// Get cofactor matrix
+        /// </summary>
+        /// <param name="m"></param>
+        /// <returns></returns>
+        public static Mat4 Cofactors(Mat4 m)
+        {
+            Mat4 ans = new();
+            for (var i = 0; i < 4; ++i)
+                for (var j = 0; j < 4; ++j)
+                {
+                    // remove row i, col j
+                    Mat3 temp = new();
+                    for (var ii = 0; ii < 3; ++ii)
+                        for (var jj = 0; jj < 3; ++jj)
+                        {
+                            var di = ii >= i ? 1 : 0;
+                            var dj = jj >= j ? 1 : 0;
+                            temp[ii, jj] = m[ii + di, jj + dj];
+                        }
+                    ans[i, j] = temp.Det;
+                }
+            return ans;
+        }
+
+
+        public static Mat4 operator /(Mat4 m, double s) => (1 / s) * m;
+
+        public static Mat4 operator *(Mat4 m, double s) => s * m;
+
+        public static Mat4 operator *(double s, Mat4 m)
+        {
+            var m2 = new Mat4(m);
+            for (var i = 0; i < 4; ++i)
+                for (var j = 0; j < 4; ++j)
+                    m2[i, j] *= s;
+            return m2;
+        }
+
+
+        public static Mat4 operator +(Mat4 a, Mat4 b)
+        {
+            var m = new Mat4();
+            for (var i = 0; i < 4; ++i)
+                for (var j = 0; j < 4; ++j)
+                    m[i, j] = a[i, j] + b[i, j];
+            return m;
+        }
         public static Mat4 operator -(Mat4 a, Mat4 b)
         {
             var m = new Mat4();

@@ -5,13 +5,13 @@
     <Nullable>enable</Nullable>
     <AssemblyName>LomontSharp</AssemblyName>
     <RootNamespace>Lomont</RootNamespace>
-    <Version>0.6.1</Version>
+    <Version>0.6.3</Version>
     <Authors>Chris Lomont</Authors>
     <Description>Chris Lomont commonly used components</Description>
     <Copyright>Copyright Chris Lomont 2020-2022</Copyright>
     <PackageProjectUrl>https://github.com/ChrisLomont/LomontSharp</PackageProjectUrl>
     <RepositoryUrl>https://github.com/ChrisLomont/LomontSharp</RepositoryUrl>
-    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
   </PropertyGroup>
 

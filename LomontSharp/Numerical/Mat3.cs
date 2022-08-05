@@ -82,6 +82,8 @@ namespace Lomont.Numerical
             set => Values[i, j] = value;
         }
 
+        public double Trace => Values[0, 0] + Values[1, 1] + Values[2, 2];
+
         public static Mat3 operator *(Mat3 a, Mat3 b)
         {
             var m = new Mat3();
@@ -96,6 +98,8 @@ namespace Lomont.Numerical
 
             return m;
         }
+
+        public static Mat3 operator /(Mat3 m, double s) => (1/s) * m;
 
         public static Mat3 operator *(Mat3 m, double s) => s * m;
 
