@@ -15,6 +15,52 @@ namespace TestLomontSharp
         }
 
         [Test]
+        public void TestCofactors()
+        {
+            var c1 = new Mat4(
+                1,2,3,4,
+                5,4,7,2,
+                7,8,1,2,
+                4,4,1,2
+                );
+            var c2 = Mat4.Cofactors(c1);
+            var c3 = new Mat4(
+                -48,36,8,20,
+                8,-6,20,-14,
+                -72,86,12,-34,
+                160,-152,-48,72
+                );
+            Assert.True((c3 - c2).MaxNorm() == 0);
+        }
+
+        [Test]
+        public void TestOps()
+        {
+            var m3 = new Mat3();
+            var m4 = new Mat4();
+
+            // set some values
+            m3.Apply((i, j, v) => i + j * j);
+            m4.Apply((i, j, v) => i + j * j);
+
+            // *,+, -, /
+            var m5 = 2 * m3 + m3 * 5 - m3 * m3 / 3.0;
+            var m6 = 2 * m4 + m4 * 5 - m4 * m4 / 3.0;
+
+            Assert.True(m5 != Mat3.Zero);
+            Assert.True(m6 != Mat4.Zero);
+
+            // unary
+            var m7 = +m5 + (-m5);
+            var m8 = +m6 + (-m6);
+            Assert.True(m7 == Mat3.Zero);
+            Assert.True(m8 == Mat4.Zero);
+
+
+            Assert.True(true);
+        }
+
+        [Test]
         public void TestRotation()
         {
             // check rotation orientations are right handed 
@@ -80,8 +126,8 @@ namespace TestLomontSharp
             Assert.True((m1 * m2 - Mat3.Identity).MaxNorm()<0.000001);
             Assert.True((m2 * m1 - Mat3.Identity).MaxNorm()<0.000001);
 
-            Assert.True((m1.Invert()- m2).MaxNorm()<0.000001);
-            Assert.True((m2.Invert()- m1).MaxNorm()<0.000001);
+            Assert.True((m1.Inverse()- m2).MaxNorm()<0.000001);
+            Assert.True((m2.Inverse()- m1).MaxNorm()<0.000001);
         }
 
         [Test]

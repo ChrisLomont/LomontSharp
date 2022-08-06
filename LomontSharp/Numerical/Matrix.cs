@@ -1,4 +1,8 @@
 ﻿using System;
+using System.Text;
+using System.Collections.Generic;
+using System.Linq;
+using System.Drawing.Drawing2D;
 
 namespace Lomont.Numerical
 {
@@ -7,27 +11,142 @@ namespace Lomont.Numerical
     /// </summary>
     public class Matrix
     {
-        public double[,] Values { get;  }
-        public int Rows { get;  }
+        #region Members
+        public double[,] Values { get; private set; }
+        public int Rows { get; }
         public int Columns { get; }
+        #endregion
 
-        public double this[int i, int j]
-            {
-            get { return Values[i, j]; }
-            set { Values[i, j] = value; }
-            }
-
+        #region Constructors
+        public Matrix(double[,] values)
+        {
+            Values = values;
+            Rows = values.GetLength(0);
+            Columns = values.GetLength(1);
+        }
 
         /// <summary>
         /// Create a rows by columns sized matrix
+        /// default to zero matrix
         /// </summary>
         /// <param name="rows"></param>
         /// <param name="columns"></param>
-        public Matrix(int rows, int columns)
+        public Matrix(int rows, int columns, double[]? values = null)
         {
             Rows = rows;
             Columns = columns;
-            Values = new double[rows,columns]; 
+            Values = new double[rows, columns];
+            if (values != null)
+            {
+                System.Diagnostics.Trace.Assert(columns * rows == values.Length);
+                var k = 0;
+                for (var row = 0; row < Rows; ++row)
+                    for (var col = 0; col < Columns; ++col)
+                        Values[row, col] = values[k++];
+            }
+        }
+
+        public Matrix(Matrix m) : this (m.Rows, m.Columns)
+        {
+            for (var row = 0; row < Rows; ++row)
+                for (var col = 0; col < Columns; ++col)
+                    Values[row, col] = m[row, col];
+        }
+
+        public Matrix(int rows, int columns, IEnumerable<double> vals) : this(rows, columns, vals.ToArray())
+        {
+        }
+
+        /// <summary>
+        /// Constant value matrix
+        /// </summary>
+        /// <param name="val"></param>
+        public Matrix(int rows, int columns, double value) : this(rows, columns)
+        {
+            for (var row = 0; row < Rows; ++row)
+                for (var col = 0; col < Columns; ++col)
+                    Values[row, col] = value;
+        }
+
+
+        #endregion
+
+        /// <summary>
+        /// Min value in matrix
+        /// </summary>
+        public double Min => Get(Double.MaxValue, System.Math.Min);
+        /// <summary>
+        /// Max value in matrix
+        /// </summary>
+        public double Max => Get(Double.MinValue, System.Math.Max);
+
+        /// <summary>
+        /// Given start value, apply functor over all matrix items
+        /// </summary>
+        /// <param name="s"></param>
+        /// <param name="f"></param>
+        /// <returns></returns>
+        public double Get(double s, Func<double, double, double> f)
+        {
+            var t = s;
+            for (var i = 0; i < Rows; ++i)
+                for (var j = 0; j < Columns; ++j)
+                    t = f(this[i, j], t);
+            return t;
+        }
+
+
+        public double this[int row, int col]
+            {
+            get => Values[row, col]; 
+            set => Values[row, col] = value; 
+            }
+
+        public double Trace
+        {
+            get
+            {
+                var s = 0.0;
+                for (var i = 0; i < Math.Min(Rows,Columns); ++i)
+                    s += this[i, i];
+                return s;
+            }
+        }
+
+
+        public static Matrix operator *(Matrix lhs, Matrix rhs)
+        {
+            System.Diagnostics.Trace.Assert(lhs.Columns == rhs.Rows);
+
+            var m = new Matrix(lhs.Rows, rhs.Columns);
+            for (var i = 0; i < lhs.Rows; ++i)
+                for (var j = 0; j < rhs.Columns; ++j)
+                {
+                    var s = 0.0;
+                    for (var k = 0; k < lhs.Columns; ++k)
+                        s += lhs[i, k] * rhs[k, j];
+                    m[i, j] = s;
+                }
+            return m;
+        }
+
+        public static Matrix operator+(Matrix lhs, Matrix rhs)
+        {
+            System.Diagnostics.Trace.Assert(lhs.Rows == rhs.Rows && lhs.Columns == rhs.Columns);
+            var m = new Matrix(lhs.Rows,lhs.Columns);
+            for (var i = 0; i < lhs.Rows; ++i)
+                for (var j = 0; j < lhs.Columns; ++j)
+                    m[i, j] = lhs[i, j] + rhs[i, j];
+            return m;
+        }
+        public static Matrix operator -(Matrix lhs, Matrix rhs)
+        {
+            System.Diagnostics.Trace.Assert(lhs.Rows == rhs.Rows && lhs.Columns == rhs.Columns);
+            var m = new Matrix(lhs.Rows, lhs.Columns);
+            for (var i = 0; i < lhs.Rows; ++i)
+                for (var j = 0; j < lhs.Columns; ++j)
+                    m[i, j] = lhs[i, j] - rhs[i, j];
+            return m;
         }
 
         /// <summary>
@@ -100,10 +219,6 @@ namespace Lomont.Numerical
             return true; // success
         }
 
-
-
-
-
         /// <summary>
         /// Solve Ax=b
         /// </summary>
@@ -142,6 +257,177 @@ namespace Lomont.Numerical
                 b[i] = sum / A[i, i];
             }
         }
+
+        /// <summary>
+        /// Submatrix by removing one row and column
+        /// </summary>
+        /// <returns></returns>
+        public Matrix Submatrix(int row, int column)
+        {
+            return Submatrix(new int[] { row }, new int[] { column });
+        }
+
+        /// <summary>
+        /// Submatrix by removing rows and columns
+        /// </summary>
+        /// <returns></returns>
+        public Matrix Submatrix(int [] rows, int [] columns)
+        {
+            // quick lookups - todo - make whole thing more efficient?
+            var hi = new HashSet<int>(rows);
+            var hj = new HashSet<int>(columns);
+
+            var m = new Matrix(Rows-rows.Length, Columns-columns.Length);
+            
+            var si = 0; // source index
+            for (var i = 0; i < m.Rows; ++i)
+            {
+                while (hi.Contains(si))
+                    ++si;
+
+                var sj = 0; // source index
+                for (var j = 0; j < m.Columns; ++j)
+                {
+                    while (hj.Contains(sj))
+                        ++sj;
+
+                    m[i, j] = this[si,sj];
+                    ++sj;
+                }
+                ++si;
+            }
+
+            return m;
+        }
+
+        /// <summary>
+        /// Transpose in place, return self
+        /// </summary>
+        public Matrix Transpose()
+        {
+            if (Rows == Columns)
+            {
+                //in place
+                for (var i = 0; i < Rows; i++)
+                    for (var j = i + 1; j < Columns; j++)
+                    { // swap
+                        (this[i, j], this[j, i]) = (this[j, i], this[i, j]);
+                    }
+            }
+            else
+            {
+                var dest = new double[Columns, Rows];
+                for (var i = 0; i < Rows; i++)
+                    for (var j = Columns; j < Columns; j++)
+                        dest[j,i] = this[i,j];
+                Values = dest;
+            }
+            return this;
+        }
+
+        public static Matrix operator /(Matrix m, double s) => (1 / s) * m;
+
+        public static Matrix operator *(Matrix m, double s) => s * m;
+
+        public static Matrix operator *(double s, Matrix m)
+        {
+            var m2 = new Matrix(m.Rows,m.Columns);
+            for (var i = 0; i < m.Rows; ++i)
+                for (var j = 0; j < m.Columns; ++j)
+                    m2[i, j] = m[i,j]*s;
+            return m2;
+        }
+
+        public bool Equals(Matrix other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            if (other.Columns != Columns || other.Rows != Rows)
+                return false;
+            
+            var diff = other - this;
+            var n = diff.MaxNorm();
+
+            return n < 0.0001; // todo- smarter zero compare?
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((Matrix)obj); // calls above
+        }
+
+        public override int GetHashCode()
+        {
+            // todo?
+            return (Values != null ? Values.GetHashCode() : 0);
+        }
+
+        public static bool operator ==(Matrix a, Matrix b)
+        {
+            return a.Equals(b);
+        }
+
+        public static bool operator !=(Matrix a, Matrix b)
+        {
+            return !(a == b);
+        }
+
+        public static Matrix operator +(Matrix a) => a;
+        public static Matrix operator -(Matrix a)
+        {
+            var m = new Matrix(a);
+            m.Apply((i, j, v) => -v);
+            return m;
+        }
+
+
+        /// <summary>
+        /// Functor - apply fun to i,j,v
+        /// </summary>
+        public void Apply(Func<int, int, double, double> func)
+        {
+            for (var i = 0; i < Rows; ++i)
+                for (var j = 0; j < Columns; ++j)
+                    this[i, j] = func(i, j, this[i, j]);
+        }
+
+
+        #region IFormattable Members
+
+        public string ToString(string format, IFormatProvider formatProvider)
+        {
+            return ToString();
+        }
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder();
+            for (var i = 0; i < Rows; ++i)
+            {
+                for (var j = 0; j < Columns; ++j)
+                    sb.Append($"{Values[i, j]} ");
+                sb.AppendLine();
+            }
+            return sb.ToString();
+        }
+
+        #endregion
+
+        #region Norms
+        public double MaxNorm()
+        {
+            var norm = 0.0;
+            for (var i = 0; i < Rows; ++i)
+                for (var j = 0; j < Columns; ++j)
+                    norm = Math.Max(norm, Math.Abs(Values[i, j]));
+            return norm;
+        }
+
+        #endregion
+
 
     }
 }

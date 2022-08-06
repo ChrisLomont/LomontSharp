@@ -1,4 +1,27 @@
-﻿Things to gather from old, other code
+﻿TODO:
+Things to add, fix, etc.
+
+DONE1. Matrix and Vec cleanup:
+DONE    same base class
+DONE    same funcs in them
+DONE    leverage base class
+DONE    general, specialize to 2d,3d,4d
+DONE    base things to Matrix class : LU, QR, Lin solver, etc.
+
+DONE: 2. Fix cofactors
+3. LU stuff needs Det != 0
+DONE 4. mat,vec - remove row, col
+DONE 5. mat, vec copy
+6. mat, vec: 0,1 items can be modified?! Same as axes? return copies?
+DONE 7. orient pts needs fixed
+
+8. better mvvm libs: Set, Get ppty, observable base, base, etc. - maybe replace with Microsoft?
+
+
+Not kept up to date - this list now old!
+
+Things to gather from old, other code
+
 * = done first release
 # = added in 2nd
 $ = added for third

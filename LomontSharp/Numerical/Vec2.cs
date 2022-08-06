@@ -7,6 +7,7 @@ namespace Lomont.Numerical
     /// Represent a 2D vector
     /// </summary>
     public class Vec2 :
+        Lomont.Numerical.Vector<double>,
         // basic generic support
         IAdditiveIdentity<Vec2, Vec2>,
         IAdditionOperators<Vec2, Vec2, Vec2>,
@@ -15,19 +16,50 @@ namespace Lomont.Numerical
         IDistance<Vec2, Vec2, double>
 
     {
-        public double X { get; set; }
-        public double Y { get; set; }
 
-        public Vec2(double x = 0, double y = 0)
+        #region Constants
+        const int size = 2;
+
+        public static Vec2 Zero { get; } = new Vec2(0, 0);
+        public static Vec2 One { get; } = new Vec2(1, 1);
+        public static Vec2 Origin { get; } = new Vec2(0, 0);
+        public static Vec2 XAxis { get; } = new Vec2(1, 0);
+        public static Vec2 YAxis { get; } = new Vec2(0, 1);
+
+        /// <summary>
+        /// Vector of min values in each slot
+        /// </summary>
+        public static Vec2 Min { get; } = new Vec2(double.MinValue, double.MinValue);
+
+        /// <summary>
+        /// Vector of max values in each slot
+        /// </summary>
+        public static Vec2 Max { get; } = new Vec2(double.MaxValue, double.MaxValue);
+
+        #endregion
+
+        #region Properties
+        public double X { get => Values[0]; set => Values[0] = value; }
+        public double Y { get => Values[1]; set => Values[1] = value; }
+        #endregion
+
+
+        #region Constructors, Deconstructor, Set
+
+        public Vec2(double[] vals) : base(size,vals)
+        {
+            System.Diagnostics.Trace.Assert(Dimension == size);
+        }
+
+        public Vec2(double x = 0, double y = 0) : base(size)
         {
             X = x;
             Y = y;
         }
 
-        public Vec2(Vec2 v) : this(v.X, v.Y)
+        public Vec2(Vec2 v) : base(v)
         {
-            X = v.X;
-            Y = v.Y;
+            System.Diagnostics.Trace.Assert(Dimension == size);
         }
 
         public void Deconstruct(out double x, out double y)
@@ -36,40 +68,56 @@ namespace Lomont.Numerical
             y = this.Y;
         }
 
-        public static Vec2 operator +(Vec2 a, Vec2 b)
+        public void Set(double x, double y)
         {
-            return new Vec2(a.X + b.X, a.Y + b.Y);
+            X = x;
+            Y = y;
         }
 
-        public static Vec2 operator -(Vec2 a)
-        {
-            return new Vec2(-a.X, -a.Y);
+        public void Set(Vec2 vector3) => Set(vector3.X, vector3.Y);
+
+
+        #endregion
+
+        #region Functor 
+        public Vec2 Map(Func<double, double> func) => new Vec2(base.Map(func).Values);
+
+        public static Vec2 Apply(Vec2 a, Vec2 b, Func<double, double, double> func) => new Vec2(Vector<double>.Apply(a, b, func).Values);
+
+        #endregion
+
+        #region Math operators
+        public static Vec2 operator +(Vec2 a) => a;
+        public static Vec2 operator -(Vec2 a) => new Vec2((-((Vector<double>)a)).Values);
+        public static Vec2 operator +(Vec2 a, Vec2 b) => new Vec2(((Vector<double>)a + (Vector<double>)b).Values);
+        public static Vec2 operator -(Vec2 a, Vec2 b) => new Vec2(((Vector<double>)a - (Vector<double>)b).Values);
+        public static Vec2 operator *(double a, Vec2 b) => new Vec2(b.Map(v => a * v).Values);
+        public static Vec2 operator *(Vec2 b, double a) => a * b;
+        public static Vec2 operator /(Vec2 a, double b) => (1.0 / b) * a;
+        #endregion
+
+        #region Linear Algebra
+        /// <summary>
+        /// return unit length in this direction,
+        /// or 0,0,0 if already 0
+        /// </summary>
+        public Vec2 Normalized()
+        { // todo - merge with Unit versions
+            var d = Length;
+            if (Length < 1e-6)
+                return new Vec2(0, 0);
+            return this * 1.0 / d;
         }
 
-        public static Vec2 operator -(Vec2 a, Vec2 b)
+        /// <summary>
+        /// make this a unit vector
+        /// </summary>
+        public Vec2 Normalize()
         {
-            return new Vec2(a.X - b.X, a.Y - b.Y);
-        }
-
-        public static Vec2 operator *(double a, Vec2 b)
-        {
-            return new Vec2(a * b.X, a * b.Y);
-        }
-
-        public static Vec2 operator *(Vec2 b, double a)
-        {
-            return new Vec2(a * b.X, a * b.Y);
-        }
-
-        public static Vec2 operator /(Vec2 a, double b)
-        {
-            var r = 1 / b;
-            return new Vec2(a.X * r, a.Y * r);
-        }
-
-        public static double Dot(Vec2 a, Vec2 b)
-        {
-            return a.X * b.X + a.Y * b.Y;
+            if (Length == 0) return this;
+            var a = this;
+            a /= Length;
+            return this;
         }
 
         public static double Cross2D(Vec2 a, Vec2 b)
@@ -79,26 +127,6 @@ namespace Lomont.Numerical
 
 
         public double Length => System.Math.Sqrt(LengthSquared);
-        public double LengthSquared => Dot(this, this);
-
-
-        /// <summary>
-        /// return unit length in this direction,
-        /// or 0,0,0 if already 0
-        /// </summary>
-        public Vec2 Normalize()
-        {
-            var d = Length;
-            if (Length < 0.000001)
-                return new Vec2(0, 0);
-            return this * 1.0 / d;
-        }
-
-
-        public static Vec2 Unit(Vec2 a)
-        {
-            return a / a.Length;
-        }
 
         /// <summary>
         /// Distance between points
@@ -108,6 +136,9 @@ namespace Lomont.Numerical
         /// <returns></returns>
         public static double Distance(Vec2 a, Vec2 b) => (a - b).Length;
 
+        #endregion
+
+        #region Geometric
         /// <summary>
         /// Return angle between vectors in radians
         /// </summary>
@@ -117,55 +148,18 @@ namespace Lomont.Numerical
             return System.Math.Acos(Dot(a, b) / (a.Length * b.Length));
         }
 
-        public double this[int i]
-        {
-            get
-            {
-                return i switch
-                {
-                    0 => X,
-                    1 => Y,
-                    2 => 1.0, // treat as homogeneous
-                    _ => 0.0
-                };
-            }
-            set
-            {
-                switch (i)
-                {
-                    case 0:
-                        X = value;
-                        break;
-                    case 1:
-                        Y = value;
-                        break;
-                }
-            }
-        }
 
+        #endregion
 
+        public static Vec2 ComponentwiseMin(Vec2 a, Vec2 b) =>
+            new Vec2(Componentwise((Vector<double>)a, (Vector<double>)b, Math.Min).Values);
 
-        public override string ToString()
-        {
-            return $"{X},{Y}";
-        }
+        public static Vec2 ComponentwiseMax(Vec2 a, Vec2 b) =>
+            new Vec2(Componentwise((Vector<double>)a, (Vector<double>)b, Math.Max).Values);
 
+        public static Vec2 Componentwise(Vec2 a, Vec2 b, Func<double, double, double> func) =>
+            new Vec2(Componentwise((Vector<double>)a, (Vector<double>)b, func).Values);
 
-        public static Vec2 ComponentwiseMin(Vec2 a, Vec2 b)
-        {
-            return Componentwise(a, b, System.Math.Min);
-
-        }
-
-        public static Vec2 ComponentwiseMax(Vec2 a, Vec2 b)
-        {
-            return Componentwise(a, b, System.Math.Max);
-        }
-
-        public static Vec2 Componentwise(Vec2 a, Vec2 b, Func<double, double, double> func)
-        {
-            return new Vec2(func(a.X, b.X), func(a.Y, b.Y));
-        }
 
         #region Generic
         public static Vec2 AdditiveIdentity => Vec2.Zero;
@@ -183,29 +177,6 @@ namespace Lomont.Numerical
         {
             return left * right;
         }
-
-        #endregion
-
-
-        #region Constants
-
-        public static Vec2 Origin { get; } = new Vec2(0, 0);
-
-        public static Vec2 Zero { get; } = new Vec2(0, 0);
-
-        public static Vec2 XAxis { get; } = new Vec2(1, 0);
-
-        public static Vec2 YAxis { get; } = new Vec2(0, 1);
-
-        /// <summary>
-        /// Vector of min values in each slot
-        /// </summary>
-        public static Vec2 Min { get; } = new Vec2(double.MinValue, double.MinValue);
-
-        /// <summary>
-        /// Vector of max values in each slot
-        /// </summary>
-        public static Vec2 Max { get; } = new Vec2(double.MaxValue, double.MaxValue);
 
         #endregion
 

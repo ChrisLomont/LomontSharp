@@ -1,19 +1,21 @@
 ﻿using System;
 using System.Text;
+using System.Diagnostics;
+using System.Collections.Generic;
 
 namespace Lomont.Numerical
 {
     /// <summary>
     /// Represent a 2D transformation as a 3x3 matrix
     /// </summary>
-    public class Mat3 // todo : IEquatable<Mat3>
+    public class Mat3 :Matrix 
     {
+        #region Constants
+        const int size = 3;
 
         /// <summary>
-        /// Indexed by row, column
+        ///  The identity matrix
         /// </summary>
-        public double[,] Values { get; set; }
-
         public static Mat3 Identity { get; } =
             new Mat3(
                 1, 0, 0, 
@@ -21,126 +23,183 @@ namespace Lomont.Numerical
                 0, 0, 1
             );
 
+        /// <summary>
+        /// The zero matrix
+        /// </summary>
         public static Mat3 Zero { get; } =
             new Mat3(
                 0, 0, 0, 
                 0, 0, 0, 
                 0, 0, 0
             );
+        #endregion
 
+        #region Constructors
 
         /// <summary>
         /// Get matrix, defaults to identity
         /// </summary>
-        public Mat3()
+        public Mat3() : base(size,size)
         {
-            Values = new double[3, 3];
             for (var i = 0; i < 3; ++i)
                 Values[i, i] = 1; // identity matrix
         }
 
         // from values, row at a time
-        public Mat3(params double[] vals)
+        public Mat3(double[,] values) : base(values)
         {
-            Values = new double[3, 3];
-            if (vals.Length == 0) return;
-            var k = 0;
-            for (var row = 0; row < 3; ++row)
-                for (var col = 0; col < 3; ++col)
-                    Values[row, col] = vals[k++];
+            System.Diagnostics.Trace.Assert(Rows == size);
+            System.Diagnostics.Trace.Assert(Columns == size);
         }
+
+
+        // from values, row at a time
+        public Mat3(params double[] values) : base (size,size,values)
+        {
+            System.Diagnostics.Trace.Assert(Rows == size);
+            System.Diagnostics.Trace.Assert(Columns == size);
+        }
+
+        public Mat3(Mat3 m) : base(m)
+        {
+            System.Diagnostics.Trace.Assert(Rows == size);
+            System.Diagnostics.Trace.Assert(Columns == size);
+        }
+
+        public Mat3(IEnumerable<double> vals) : base(size, size, vals)
+        {
+            System.Diagnostics.Trace.Assert(Rows == size);
+            System.Diagnostics.Trace.Assert(Columns == size);
+        }
+
 
         /// <summary>
         /// Constant value matrix
         /// </summary>
         /// <param name="val"></param>
-        public Mat3(double val)
+        public Mat3(double value) : base(size,size,value)
         {
-            Values = new double[3, 3];
-            for (var i = 0; i < 3; ++i)
-            for (var j = 0; j < 3; ++j)
-                Values[i, j] = val; // constant matrix
+            System.Diagnostics.Trace.Assert(Rows == size);
+            System.Diagnostics.Trace.Assert(Columns == size);
         }
 
-        public Mat3(Mat3 m)
+        #endregion
+
+        #region Math operators
+        public static Mat3 operator +(Mat3 a) => a;
+        public static Mat3 operator -(Mat3 a) => new Mat3((-(Matrix)a).Values);
+        public static Mat3 operator +(Mat3 a, Mat3 b) => new Mat3(((Matrix)a + (Matrix)b).Values);
+        public static Mat3 operator -(Mat3 a, Mat3 b) => new Mat3(((Matrix)a - (Matrix)b).Values);
+        public static Mat3 operator *(Mat3 a, Mat3 b) => new Mat3(((Matrix)a * (Matrix)b).Values);
+        public static Mat3 operator *(Mat3 m, double s) => s * m;
+        public static Mat3 operator *(double s, Mat3 m) => new Mat3((s * (Matrix)m).Values);
+        public static Mat3 operator /(Mat3 m, double s) => (1 / s) * m;
+        #endregion
+
+        #region Linear Algebra
+
+        public Mat3 Transposed()
         {
-            Values = new double[3, 3];
-            for (var i = 0; i < 3; ++i)
-            for (var j = 0; j < 3; ++j)
-                Values[i, j] = m[i, j];
-        }
-
-        /// <summary>
-        /// get entry (i,j) where i is row, j is column, following standard math notation
-        /// </summary>
-        /// <param name="i"></param>
-        /// <param name="j"></param>
-        /// <returns></returns>
-        public double this[int i, int j]
-        {
-            get => Values[i, j];
-            set => Values[i, j] = value;
-        }
-
-        public double Trace => Values[0, 0] + Values[1, 1] + Values[2, 2];
-
-        public static Mat3 operator *(Mat3 a, Mat3 b)
-        {
-            var m = new Mat3();
-            for (var i = 0; i < 3; ++i)
-            for (var j = 0; j < 3; ++j)
-            {
-                var s = 0.0;
-                for (var k = 0; k < 3; ++k)
-                    s += a[i, k] * b[k, j];
-                m[i, j] = s;
-            }
-
+            var m = new Mat3(this);
+            m.Transpose();
             return m;
         }
 
-        public static Mat3 operator /(Mat3 m, double s) => (1/s) * m;
-
-        public static Mat3 operator *(Mat3 m, double s) => s * m;
-
-        public static Mat3 operator *(double s, Mat3 m)
+        /// <summary>
+        /// transpose in place
+        /// </summary>
+        public new Mat3 Transpose()
         {
-            var m2 = new Mat3(m);
-            for (var i = 0; i < 3; ++i)
-            for (var j = 0; j < 3; ++j)
-                m2[i, j] *= s;
-            return m2;
-
+            base.Transpose();
+            return this;
         }
 
-        public static Vec2 operator *(Mat3 a, Vec2 b)
+
+        /// <summary>
+        /// Get the determinant of this matrix
+        /// </summary>
+        public double Det
         {
-            var v = new Vec2(0, 0);
-            for (var i = 0; i < 2; ++i)
-            for (var j = 0; j < 3; ++j)
-                v[i] += a[i, j] * b[j];
-            return v;
+            get
+            { // cofactor expansion
+                var m = this;
+                return
+                    m[0, 0] * (m[1, 1] * m[2, 2] - m[2, 1] * m[1, 2]) -
+                    m[0, 1] * (m[1, 0] * m[2, 2] - m[1, 2] * m[2, 0]) +
+                    m[0, 2] * (m[1, 0] * m[2, 1] - m[1, 1] * m[2, 0]);
+            }
+        }
+
+        /// <summary>
+        /// Invert in place
+        /// </summary>
+        /// <returns></returns>
+        public Mat3 Invert()
+        {
+            var m = this;
+            var t = new Mat3(
+                m[1, 1] * m[2, 2] - m[2, 1] * m[1, 2],
+                m[0, 2] * m[2, 1] - m[0, 1] * m[2, 2],
+                m[0, 1] * m[1, 2] - m[0, 2] * m[1, 1],
+                m[1, 2] * m[2, 0] - m[1, 0] * m[2, 2],
+                m[0, 0] * m[2, 2] - m[0, 2] * m[2, 0],
+                m[1, 0] * m[0, 2] - m[0, 0] * m[1, 2],
+                m[1, 0] * m[2, 1] - m[2, 0] * m[1, 1],
+                m[2, 0] * m[0, 1] - m[0, 0] * m[2, 1],
+                m[0, 0] * m[1, 1] - m[1, 0] * m[0, 1]
+            );
+
+            t /= Det;
+            
+            // set values
+            Apply(
+                (i, j, v) => t[i,j]
+                );
+
+            return this;
         }
         
-        public static Vec3 operator *(Mat3 a, Vec3 b)
+        /// <summary>
+        /// Compute matrix inverse
+        /// </summary>
+        /// <returns></returns>
+        public Mat3 Inverse()
         {
-            var v = new Vec3(0, 0,0);
-            for (var i = 0; i < 3; ++i)
-                for (var j = 0; j < 3; ++j)
-                    v[i] += a[i, j] * b[j];
-            return v;
+            var m = new Mat3(this);
+            return m.Invert();
+        }
+
+        public Mat3 ToIdentity()
+        {
+            Apply((i, j, v) => i == j ? 1 : 0);
+            return this;
+        }
+
+        /// <summary>
+        /// Get cofactor matrix
+        /// </summary>
+        /// <param name="m"></param>
+        /// <returns></returns>
+        public static Mat3 Cofactors(Mat3 m)
+        {
+            Mat3 ans = new();
+            for (var i = 0; i < m.Rows; ++i)
+                for (var j = 0; j < m.Columns; ++j)
+                {
+                    // remove row i, col j
+                    var temp = m.Submatrix(i, j);
+                    var det = m[0,0] * m[1,1] - m[1,0] * m[0,1];
+                    var odd = ((i + j) & 1) == 1;
+                    ans[i, j] = det * (odd ? -1 : 1);
+                }
+            return ans;
         }
 
 
 
-        public static Mat3 operator +(Mat3 a, Mat3 b)
-        {
-            var m2 = new Mat3(a);
-            for (var i = 0; i < 3; ++i)
-            for (var j = 0; j < 3; ++j)
-                m2[i, j] += b[i, j];
-            return m2;
-        }
+        #endregion
+
+        #region Geometric
 
         /// <summary>
         /// Create a scaling matrix
@@ -175,17 +234,15 @@ namespace Lomont.Numerical
             return m;
         }
 
-        public static Mat3 operator -(Mat3 a, Mat3 b)
+        // maniplate 2 vector, treating mat3 as affine transform
+        public static Vec2 operator *(Mat3 a, Vec2 b)
         {
-            var m = new Mat3();
-            for (var i = 0; i < 3; ++i)
-                for (var j = 0; j < 3; ++j)
-                    m[i, j] = a[i, j] - b[i, j];
-            return m;
+            var v = new Vec2(0, 0);
+            for (var i = 0; i < 2; ++i)
+            for (var j = 0; j < 3; ++j)
+                v[i] += a[i, j] * b[j];
+            return v;
         }
-
-
-#if true
 
         /// <summary>
         /// Create a matrix that rotates the first 3D frame into the second 3D frame.
@@ -239,7 +296,7 @@ namespace Lomont.Numerical
         public Vec3 ToRotationVector()
         {
             var q = Quat.FromRotationMatrix(this);
-            var (u,a) = q.ToAxisAngle();
+            var (u, a) = q.ToAxisAngle();
             return a * u;
         }
 
@@ -251,36 +308,6 @@ namespace Lomont.Numerical
         public static Mat3 FromRotationVector(Vec3 v) =>
             v.Length > 1e-8 ? Quat.FromAxisAngle(v.Unit(), v.Length).ToRotationMatrix() : Mat3.Identity;
 
-
-        /// <summary>
-        /// Get the determinant of this matrix
-        /// </summary>
-        public double Det
-        {
-            get
-            { // cofactor expansion
-                var m = this;
-                return
-                    m[0, 0] * (m[1, 1] * m[2, 2] - m[2, 1] * m[1, 2]) -
-                    m[0, 1] * (m[1, 0] * m[2, 2] - m[1, 2] * m[2, 0]) +
-                    m[0, 2] * (m[1, 0] * m[2, 1] - m[1, 1] * m[2, 0]);
-            }
-        }
-        public Mat3 Invert()
-        {
-            var m = this;
-            return new Mat3(
-                m[1, 1] * m[2, 2] - m[2, 1] * m[1, 2],
-                m[0, 2] * m[2, 1] - m[0, 1] * m[2, 2],
-                m[0, 1] * m[1, 2] - m[0, 2] * m[1, 1],
-                m[1, 2] * m[2, 0] - m[1, 0] * m[2, 2],
-                m[0, 0] * m[2, 2] - m[0, 2] * m[2, 0],
-                m[1, 0] * m[0, 2] - m[0, 0] * m[1, 2],
-                m[1, 0] * m[2, 1] - m[2, 0] * m[1, 1],
-                m[2, 0] * m[0, 1] - m[0, 0] * m[2, 1],
-                m[0, 0] * m[1, 1] - m[1, 0] * m[0, 1]
-            ) * (1.0 / Det);
-        }
 
         /// <summary>
         /// Given rotation vector, compute
@@ -301,17 +328,6 @@ namespace Lomont.Numerical
             // rotation formula
             return c * Identity + (1 - c) * Vec3.Outer(axis, axis) + s * Vec3.CrossOperator(axis);
         }
-
-
-        public double MaxNorm()
-        {
-            var norm = 0.0;
-            for (var i = 0; i < 3; ++i)
-                for (var j = 0; j < 3; ++j)
-                    norm = System.Math.Max(norm, System.Math.Abs(Values[i, j]));
-            return norm;
-        }
-
 
 #if false
         /// <summary>
@@ -428,32 +444,22 @@ namespace Lomont.Numerical
             }
 
 #endif
-#endif
 
-        /// <summary>
-        /// Matrix transpose
-        /// </summary>
-        /// <returns></returns>
-        public Mat3 Transpose()
+
+
+        #endregion
+
+        public static Vec3 operator *(Mat3 a, Vec3 b)
         {
-            var m = new Mat3();
+            var v = new Vec3(0, 0, 0);
             for (var i = 0; i < 3; ++i)
-            for (var j = 0; j < 3; ++j)
-                m[i, j] = this[j, i];
-            return m;
+                for (var j = 0; j < 3; ++j)
+                    v[i] += a[i, j] * b[j];
+            return v;
         }
 
-        public override string ToString()
-        {
-            var sb = new StringBuilder("[");
-            for (var i = 0; i < 3; ++i)
-            for (var j = 0; j < 3; ++j)
-            {
-                sb.Append($"{this[i, j]} ");
-            }
 
-            sb.Append(']');
-            return sb.ToString();
-        }
+
+
     }
 }

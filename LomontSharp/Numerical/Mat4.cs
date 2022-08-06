@@ -7,10 +7,18 @@ using static System.Math;
 
 namespace Lomont.Numerical
 {
-    public class Mat4
+    /// <summary>
+    /// 4x4 matrix 
+    /// Supports 3D for graphics and geometry uses
+    /// </summary>
+    public class Mat4 : Matrix
     {
-        public double[,] Values { get; set; }
+        #region Constants
+        const int size = 4; 
 
+        /// <summary>
+        /// The identity matrix
+        /// </summary>
         public static Mat4 Identity { get; } =
             new Mat4(
                 1, 0, 0, 0,
@@ -19,6 +27,9 @@ namespace Lomont.Numerical
                 0, 0, 0, 1
             );
 
+        /// <summary>
+        /// the zero matrix
+        /// </summary>
         public static Mat4 Zero { get; } =
             new Mat4(
                 0, 0, 0, 0,
@@ -27,51 +38,63 @@ namespace Lomont.Numerical
                 0, 0, 0, 0
             );
 
+        #endregion
+
+        #region Constructors
 
         /// <summary>
         /// Matrix. Default to identity
         /// </summary>
-        public Mat4()
+        public Mat4() : base(size, size)
         {
-            Values = new double[4, 4];
             for (var i = 0; i < 4; ++i)
                 Values[i, i] = 1; // identity matrix
         }
 
-        public Mat4(params double[] vals)
+        public Mat4(double[,] values) : base(values)
         {
-            Values = new double[4,4];
-            if (vals.Length == 0) return;
-            var k = 0;
-            for (var row = 0; row < 4; ++row)
-            for (var col = 0; col < 4; ++col)
-                Values[row, col] = vals[k++];
+            System.Diagnostics.Trace.Assert(Rows == size);
+            System.Diagnostics.Trace.Assert(Columns == size);
         }
 
-        public Mat4(Mat4 m)
+        public Mat4(params double[] vals) : base(size, size,vals)
         {
-            Values = new double[4, 4];
-            for (var row = 0; row < 4; ++row)
-            for (var col = 0; col < 4; ++col)
-                Values[row, col] = m[row, col];
+            System.Diagnostics.Trace.Assert(Rows == size);
+            System.Diagnostics.Trace.Assert(Columns == size);
         }
+
+        public Mat4(Mat4 m) : base(m)
+        {
+            System.Diagnostics.Trace.Assert(Rows == size);
+            System.Diagnostics.Trace.Assert(Columns == size);
+        }
+
+        public Mat4(IEnumerable<double> vals) : base(size, size, vals)
+        {
+            System.Diagnostics.Trace.Assert(Rows == size);
+            System.Diagnostics.Trace.Assert(Columns == size);
+        }
+
+        /// <summary>
+        /// Constant value matrix
+        /// </summary>
+        /// <param name="val"></param>
+        public Mat4(double value) : base(size, size, value)
+        {
+            System.Diagnostics.Trace.Assert(Rows == size);
+            System.Diagnostics.Trace.Assert(Columns == size);
+        }
+
 
         // from mat 3x3, puts 1 in 3,3 spot to make invertible
-        public Mat4(Mat3 m)
+        public Mat4(Mat3 m) : base(4, 4)
         {
-            Values = new double[4, 4];
             for (var row = 0; row < 3; ++row)
                 for (var col = 0; col < 3; ++col)
                     Values[row, col] = m[row, col];
             Values[3, 3] = 1;
         }
 
-
-        public Mat4(IEnumerable<double> vals)
-        {
-            Values = new double[4, 4];
-            vals.Select((v, i) => Values[i / 4, i % 4] = v).ToList();
-        }
 
         /// <summary>
         /// From 4 columns of 3 vectors
@@ -80,29 +103,225 @@ namespace Lomont.Numerical
         /// <param name="col2"></param>
         /// <param name="col3"></param>
         /// <param name="col4"></param>
-        public Mat4(Vec3 col1, Vec3 col2, Vec3 col3, Vec3 col4)
+        public Mat4(Vec3 col1, Vec3 col2, Vec3 col3, Vec3 col4) : base(size, size)
         {
-            Values = new double[4, 4];
-            var cols = new Vec3[] {col1,col2,col3,col4 };
+            var cols = new Vec3[] { col1, col2, col3, col4 };
             for (var r = 0; r < 4; ++r)
-            for (var c = 0; c < 4; ++c)
+                for (var c = 0; c < 4; ++c)
+                {
+                    if (r < 3)
+                        this[r, c] = cols[c][r];
+                    else
+                        this[r, c] = c == 3 ? 1 : 0;
+                }
+        }
+        #endregion
+
+        #region Math operators
+        public static Mat4 operator +(Mat4 a) => a;
+        public static Mat4 operator -(Mat4 a) => new Mat4((-(Matrix)a).Values);
+        public static Mat4 operator +(Mat4 a, Mat4 b) => new Mat4(((Matrix)a + (Matrix)b).Values);
+        public static Mat4 operator -(Mat4 a, Mat4 b) => new Mat4(((Matrix)a - (Matrix)b).Values);
+        public static Mat4 operator *(Mat4 a, Mat4 b) => new Mat4(((Matrix)a * (Matrix)b).Values);
+        public static Mat4 operator *(Mat4 m, double s) => s * m;
+        public static Mat4 operator *(double s, Mat4 m) => new Mat4((s * (Matrix)m).Values);
+        public static Mat4 operator /(Mat4 m, double s) => (1 / s) * m;
+        #endregion
+
+        #region Linear algebra
+
+        /// <summary>
+        /// Return transposed matrix
+        /// </summary>
+        /// <returns></returns>
+        public Mat4 Transposed()
+        {
+            var m = new Mat4(this);
+            m.Transpose();
+            return m;
+        }
+
+        public new Mat4 Transpose()
+        {
+            base.Transpose();
+            return this;
+        }
+
+        /// <summary>
+        /// Get the determinant of this matrix
+        /// </summary>
+        public double Det
+        {
+            get
             {
-                if (r < 3)
-                    this[r, c] = cols[c][r];
-                else
-                    this[r, c] = c == 3 ? 1 : 0;
+                // cofactor expansion
+                var m = Values; // for brevity
+                return m[0, 3] * m[1, 2] * m[2, 1] * m[3, 0] - m[0, 2] * m[1, 3] * m[2, 1] * m[3, 0] -
+                    m[0, 3] * m[1, 1] * m[2, 2] * m[3, 0] + m[0, 1] * m[1, 3] * m[2, 2] * m[3, 0] +
+                    m[0, 2] * m[1, 1] * m[2, 3] * m[3, 0] - m[0, 1] * m[1, 2] * m[2, 3] * m[3, 0] -
+                    m[0, 3] * m[1, 2] * m[2, 0] * m[3, 1] + m[0, 2] * m[1, 3] * m[2, 0] * m[3, 1] +
+                    m[0, 3] * m[1, 0] * m[2, 2] * m[3, 1] - m[0, 0] * m[1, 3] * m[2, 2] * m[3, 1] -
+                    m[0, 2] * m[1, 0] * m[2, 3] * m[3, 1] + m[0, 0] * m[1, 2] * m[2, 3] * m[3, 1] +
+                    m[0, 3] * m[1, 1] * m[2, 0] * m[3, 2] - m[0, 1] * m[1, 3] * m[2, 0] * m[3, 2] -
+                    m[0, 3] * m[1, 0] * m[2, 1] * m[3, 2] + m[0, 0] * m[1, 3] * m[2, 1] * m[3, 2] +
+                    m[0, 1] * m[1, 0] * m[2, 3] * m[3, 2] - m[0, 0] * m[1, 1] * m[2, 3] * m[3, 2] -
+                    m[0, 2] * m[1, 1] * m[2, 0] * m[3, 3] + m[0, 1] * m[1, 2] * m[2, 0] * m[3, 3] +
+                    m[0, 2] * m[1, 0] * m[2, 1] * m[3, 3] - m[0, 0] * m[1, 2] * m[2, 1] * m[3, 3] -
+                    m[0, 1] * m[1, 0] * m[2, 2] * m[3, 3] + m[0, 0] * m[1, 1] * m[2, 2] * m[3, 3];
             }
         }
 
-        public double Trace => Values[0, 0] + Values[1, 1] + Values[2, 2] + Values[3, 3];
+        /// <summary>
+        /// Invert matrix in place
+        /// </summary>
+        /// <returns></returns>
+        public Mat4 Invert()
+        {
 
+            var A2323 = Values[2, 2] * Values[3, 3] - Values[2, 3] * Values[3, 2];
+            var A1323 = Values[2, 1] * Values[3, 3] - Values[2, 3] * Values[3, 1];
+            var A1223 = Values[2, 1] * Values[3, 2] - Values[2, 2] * Values[3, 1];
+            var A0323 = Values[2, 0] * Values[3, 3] - Values[2, 3] * Values[3, 0];
+            var A0223 = Values[2, 0] * Values[3, 2] - Values[2, 2] * Values[3, 0];
+            var A0123 = Values[2, 0] * Values[3, 1] - Values[2, 1] * Values[3, 0];
+            var A2313 = Values[1, 2] * Values[3, 3] - Values[1, 3] * Values[3, 2];
+            var A1313 = Values[1, 1] * Values[3, 3] - Values[1, 3] * Values[3, 1];
+            var A1213 = Values[1, 1] * Values[3, 2] - Values[1, 2] * Values[3, 1];
+            var A2312 = Values[1, 2] * Values[2, 3] - Values[1, 3] * Values[2, 2];
+            var A1312 = Values[1, 1] * Values[2, 3] - Values[1, 3] * Values[2, 1];
+            var A1212 = Values[1, 1] * Values[2, 2] - Values[1, 2] * Values[2, 1];
+            var A0313 = Values[1, 0] * Values[3, 3] - Values[1, 3] * Values[3, 0];
+            var A0213 = Values[1, 0] * Values[3, 2] - Values[1, 2] * Values[3, 0];
+            var A0312 = Values[1, 0] * Values[2, 3] - Values[1, 3] * Values[2, 0];
+            var A0212 = Values[1, 0] * Values[2, 2] - Values[1, 2] * Values[2, 0];
+            var A0113 = Values[1, 0] * Values[3, 1] - Values[1, 1] * Values[3, 0];
+            var A0112 = Values[1, 0] * Values[2, 1] - Values[1, 1] * Values[2, 0];
 
+            var det = Values[0, 0] * (Values[1, 1] * A2323 - Values[1, 2] * A1323 + Values[1, 3] * A1223)
+                      - Values[0, 1] * (Values[1, 0] * A2323 - Values[1, 2] * A0323 + Values[1, 3] * A0223)
+                      + Values[0, 2] * (Values[1, 0] * A1323 - Values[1, 1] * A0323 + Values[1, 3] * A0123)
+                      - Values[0, 3] * (Values[1, 0] * A1223 - Values[1, 1] * A0223 + Values[1, 2] * A0123);
+            det = 1 / det;
+
+            // set values
+            Values[0, 0] = det * +(Values[1, 1] * A2323 - Values[1, 2] * A1323 + Values[1, 3] * A1223);
+            Values[0, 1] = det * -(Values[0, 1] * A2323 - Values[0, 2] * A1323 + Values[0, 3] * A1223);
+            Values[0, 2] = det * +(Values[0, 1] * A2313 - Values[0, 2] * A1313 + Values[0, 3] * A1213);
+            Values[0, 3] = det * -(Values[0, 1] * A2312 - Values[0, 2] * A1312 + Values[0, 3] * A1212);
+            Values[1, 0] = det * -(Values[1, 0] * A2323 - Values[1, 2] * A0323 + Values[1, 3] * A0223);
+            Values[1, 1] = det * +(Values[0, 0] * A2323 - Values[0, 2] * A0323 + Values[0, 3] * A0223);
+            Values[1, 2] = det * -(Values[0, 0] * A2313 - Values[0, 2] * A0313 + Values[0, 3] * A0213);
+            Values[1, 3] = det * +(Values[0, 0] * A2312 - Values[0, 2] * A0312 + Values[0, 3] * A0212);
+            Values[2, 0] = det * +(Values[1, 0] * A1323 - Values[1, 1] * A0323 + Values[1, 3] * A0123);
+            Values[2, 1] = det * -(Values[0, 0] * A1323 - Values[0, 1] * A0323 + Values[0, 3] * A0123);
+            Values[2, 2] = det * +(Values[0, 0] * A1313 - Values[0, 1] * A0313 + Values[0, 3] * A0113);
+            Values[2, 3] = det * -(Values[0, 0] * A1312 - Values[0, 1] * A0312 + Values[0, 3] * A0112);
+            Values[3, 0] = det * -(Values[1, 0] * A1223 - Values[1, 1] * A0223 + Values[1, 2] * A0123);
+            Values[3, 1] = det * +(Values[0, 0] * A1223 - Values[0, 1] * A0223 + Values[0, 2] * A0123);
+            Values[3, 2] = det * -(Values[0, 0] * A1213 - Values[0, 1] * A0213 + Values[0, 2] * A0113);
+            Values[3, 3] = det * +(Values[0, 0] * A1212 - Values[0, 1] * A0212 + Values[0, 2] * A0112);
+            return this;
+        }
+
+        /// <summary>
+        /// Compute the inverse of the matrix
+        /// </summary>
+        /// <returns></returns>
         public Mat4 Inverse()
         {
             var m = new Mat4(this);
             m.Invert();
             return m;
         }
+
+        /// <summary>
+        /// Invert matrix via Gauss Jordan
+        /// </summary>
+        public void InvertGaussJordan()
+        {
+            // Gaussian-Jordan with pivot
+            var n = 4; // size of matrix
+
+            var m = this; // alias
+            var inv = new Mat4(); // identity
+
+            double det = 1; // track determinant to check for singular matrix
+
+            // The current pivot row
+            // For each pass, first find the maximum element in the pivot column.
+            for (var row = 0; row < n; row++)
+            {
+                // find max pivot
+                var bestRow = row;
+                for (var irow = row; irow < n; irow++)
+                    if (Abs(m[irow, row]) > Abs(m[bestRow, row]))
+                        bestRow = irow;
+
+                // swap rows in both
+                if (bestRow != row)
+                {
+                    for (var col = 0; col < n; col++)
+                    {
+                        (inv[row, col], inv[bestRow, col]) = (inv[bestRow, col], inv[row, col]);
+
+                        if (col >= row)
+                        { // lower cols all zeros
+                            (m[row, col], m[bestRow, col]) = (m[bestRow, col], m[row, col]);
+                        }
+                    }
+                }
+
+                // Current pivot is m(row,row).
+                // Det is the product of the pivot elts
+                var pivot = m[row, row];
+                det = det * pivot;
+                if (det == 0)
+                    throw new ArgumentException("Cannot inverting a singular matrix");
+
+                for (var col = 0; col < n; col++)
+                {
+                    // divide by pivot to normalize 
+                    inv[row, col] = inv[row, col] / pivot;
+                    if (col >= row)
+                        m[row, col] = m[row, col] / pivot;
+                }
+
+                for (var irow = 0; irow < n; irow++)
+                {
+                    // add multiple of pivot row to cancel terms
+                    if (irow != row)
+                    {
+                        var factor = m[irow, row];
+                        for (var icol = 0; icol < n; icol++)
+                        {
+                            inv[irow, icol] -= factor * inv[row, icol];
+                            m[irow, icol] -= factor * m[row, icol];
+                        }
+                    }
+                }
+            }
+
+            // copy back
+            for (var r = 0; r < n; ++r)
+                for (var c = 0; c < n; ++c)
+                    m[r, c] = inv[r, c];
+        }
+
+        /// <summary>
+        /// Set this matrix to the identity
+        /// </summary>
+        public Mat4 ToIdentity()
+        {
+            Apply((i, j, v) => i == j ? 1 : 0);
+            return this;
+        }
+
+        public (Mat4 L, Mat4 U) DecomposeLU()
+        {
+            //            todo 
+            throw new NotImplementedException();
+        }
+
 
         /// <summary>
         /// Get cofactor matrix
@@ -116,103 +335,55 @@ namespace Lomont.Numerical
                 for (var j = 0; j < 4; ++j)
                 {
                     // remove row i, col j
-                    Mat3 temp = new();
-                    for (var ii = 0; ii < 3; ++ii)
-                        for (var jj = 0; jj < 3; ++jj)
-                        {
-                            var di = ii >= i ? 1 : 0;
-                            var dj = jj >= j ? 1 : 0;
-                            temp[ii, jj] = m[ii + di, jj + dj];
-                        }
-                    ans[i, j] = temp.Det;
+                    var temp = new Mat3(m.Submatrix(i,j).Values);
+                    var odd = ((i + j) & 1) == 1;
+                    ans[i, j] = temp.Det * (odd ? -1 : 1);
                 }
             return ans;
         }
 
+  
+        #endregion
 
-        public static Mat4 operator /(Mat4 m, double s) => (1 / s) * m;
-
-        public static Mat4 operator *(Mat4 m, double s) => s * m;
-
-        public static Mat4 operator *(double s, Mat4 m)
-        {
-            var m2 = new Mat4(m);
-            for (var i = 0; i < 4; ++i)
-                for (var j = 0; j < 4; ++j)
-                    m2[i, j] *= s;
-            return m2;
-        }
-
-
-        public static Mat4 operator +(Mat4 a, Mat4 b)
-        {
-            var m = new Mat4();
-            for (var i = 0; i < 4; ++i)
-                for (var j = 0; j < 4; ++j)
-                    m[i, j] = a[i, j] + b[i, j];
-            return m;
-        }
-        public static Mat4 operator -(Mat4 a, Mat4 b)
-        {
-            var m = new Mat4();
-            for (var i = 0; i < 4; ++i)
-            for (var j = 0; j < 4; ++j)
-                m[i, j] = a[i, j] - b[i, j];
-            return m;
-        }
-
-        public double Min => Get(Double.MaxValue, System.Math.Min);
-        public double Max => Get(Double.MinValue, System.Math.Max);
-
-        public static Vec3 Apply(Vec3 a, Vec3 b, Func<double, double, double> func)
-        {
-            return new Vec3(
-                func(a.X, b.X),
-                func(a.Y, b.Y),
-                func(a.Z, b.Z)
-            );
-        }
-
-        public double Get(double s, Func<double, double, double> f)
-        {
-            var t = s;
-            for (var i = 0; i < 4; ++i)
-            for (var j = 0; j < 4; ++j)
-                t = f(this[i, j], t);
-            return t;
-        }
-
-
-        public static Mat4 operator *(Mat4 a, Mat4 b)
-        {
-            var m = new Mat4();
-            for (var i = 0; i < 4; ++i)
-            for (var j = 0; j < 4; ++j)
-            {
-                var s = 0.0;
-                for (var k = 0; k < 4; ++k)
-                    s += a[i, k] * b[k, j];
-                m[i, j] = s;
-            }
-
-            return m;
-        }
-
+        #region Geometric
+        
         /// <summary>
-        /// Multiply 3-vector by 4-matrix, treating as a transform.
-        /// Performs homogeneous multiplication
+        /// Given three non-collinear points, create a mapping that takes them into
+        /// the xy plane of the standard frame.
+        /// Points are treated as x axis, then origin, then y axis is created in plane with p2 in top half plane
+        /// Returns forward map (item to xy plane) and inverse map (plane x to item)
         /// </summary>
-        /// <param name="a"></param>
-        /// <param name="b"></param>
+        /// <param name="p0"></param>
+        /// <param name="p1"></param>
+        /// <param name="p2"></param>
         /// <returns></returns>
-        public static Vec3 operator *(Mat4 a, Vec3 b)
+        public static (Mat4, Mat4) MapFrame(Vec3 p0, Vec3 p1, Vec3 p2)
         {
-            // treat 3 vector as 4 vector with 1 component in last spot
-            var x = a[0, 0] * b[0] + a[0, 1] * b[1] + a[0, 2] * b[2] + a[0, 3];
-            var y = a[1, 0] * b[0] + a[1, 1] * b[1] + a[1, 2] * b[2] + a[1, 3];
-            var z = a[2, 0] * b[0] + a[2, 1] * b[1] + a[2, 2] * b[2] + a[2, 3];
-            var w = a[3, 0] * b[0] + a[3, 1] * b[1] + a[3, 2] * b[2] + a[3, 3];
-            return new Vec3(x / w, y / w, z / w);
+            var x = (p0 - p1).Normalized();
+            var t = (p2 - p1).Normalized(); // place in upper half plane
+            var z = Vec3.Cross(x, t).Normalized();
+            var y = Vec3.Cross(z, x).Normalized();
+
+            // xy plane to item....
+            var q = new Mat4();
+            (q[0, 0], q[1, 0], q[2, 0]) = x;
+            (q[0, 1], q[1, 1], q[2, 1]) = y;
+            (q[0, 2], q[1, 2], q[2, 2]) = z; // rotation only
+
+            // column matrix x y z p1 is transform, we want inverse
+            // cheat by inverting rotation via transpose, and inverting translation....
+            var p = q.Transposed(); // transpose inverts rotation
+
+            (p[0, 0], p[0, 1], p[0, 2]) = x;
+            (p[1, 0], p[1, 1], p[1, 2]) = y;
+            (p[2, 0], p[2, 1], p[2, 2]) = z;
+
+            q = Translation(p1) * q; // translate to item
+            p = p * Translation(-p1); // translate back
+
+            // better be inverses
+            Debug.Assert((p * q - Identity).MaxNorm() < 0.001);
+            return (p, q);
         }
 
         /// <summary>
@@ -264,194 +435,6 @@ namespace Lomont.Numerical
         /// </summary>
         public static Mat4 Translation(Vec3 v) => Translation(v.X, v.Y, v.Z);
 
-        public Vec3 ConvertNormal(Vec3 v)
-        {
-            var zero = new Vec3(0, 0, 0);
-            return this * v - this * zero;
-        }
-
-        /// <summary>
-        /// Get the determinant of this matrix
-        /// </summary>
-        public double Det
-        {
-            get
-            {
-                // cofactor expansion
-                var m = Values; // for brevity
-                return m[0, 3] * m[1, 2] * m[2, 1] * m[3, 0] - m[0, 2] * m[1, 3] * m[2, 1] * m[3, 0] -
-                    m[0, 3] * m[1, 1] * m[2, 2] * m[3, 0] + m[0, 1] * m[1, 3] * m[2, 2] * m[3, 0] +
-                    m[0, 2] * m[1, 1] * m[2, 3] * m[3, 0] - m[0, 1] * m[1, 2] * m[2, 3] * m[3, 0] -
-                    m[0, 3] * m[1, 2] * m[2, 0] * m[3, 1] + m[0, 2] * m[1, 3] * m[2, 0] * m[3, 1] +
-                    m[0, 3] * m[1, 0] * m[2, 2] * m[3, 1] - m[0, 0] * m[1, 3] * m[2, 2] * m[3, 1] -
-                    m[0, 2] * m[1, 0] * m[2, 3] * m[3, 1] + m[0, 0] * m[1, 2] * m[2, 3] * m[3, 1] +
-                    m[0, 3] * m[1, 1] * m[2, 0] * m[3, 2] - m[0, 1] * m[1, 3] * m[2, 0] * m[3, 2] -
-                    m[0, 3] * m[1, 0] * m[2, 1] * m[3, 2] + m[0, 0] * m[1, 3] * m[2, 1] * m[3, 2] +
-                    m[0, 1] * m[1, 0] * m[2, 3] * m[3, 2] - m[0, 0] * m[1, 1] * m[2, 3] * m[3, 2] -
-                    m[0, 2] * m[1, 1] * m[2, 0] * m[3, 3] + m[0, 1] * m[1, 2] * m[2, 0] * m[3, 3] +
-                    m[0, 2] * m[1, 0] * m[2, 1] * m[3, 3] - m[0, 0] * m[1, 2] * m[2, 1] * m[3, 3] -
-                    m[0, 1] * m[1, 0] * m[2, 2] * m[3, 3] + m[0, 0] * m[1, 1] * m[2, 2] * m[3, 3];
-            }
-        }
-
-
-        /// <summary>
-        /// Invert matrix
-        /// </summary>
-        /// <returns></returns>
-        public Mat4 Invert()
-        {
-
-            var A2323 = Values[2, 2] * Values[3, 3] - Values[2, 3] * Values[3, 2];
-            var A1323 = Values[2, 1] * Values[3, 3] - Values[2, 3] * Values[3, 1];
-            var A1223 = Values[2, 1] * Values[3, 2] - Values[2, 2] * Values[3, 1];
-            var A0323 = Values[2, 0] * Values[3, 3] - Values[2, 3] * Values[3, 0];
-            var A0223 = Values[2, 0] * Values[3, 2] - Values[2, 2] * Values[3, 0];
-            var A0123 = Values[2, 0] * Values[3, 1] - Values[2, 1] * Values[3, 0];
-            var A2313 = Values[1, 2] * Values[3, 3] - Values[1, 3] * Values[3, 2];
-            var A1313 = Values[1, 1] * Values[3, 3] - Values[1, 3] * Values[3, 1];
-            var A1213 = Values[1, 1] * Values[3, 2] - Values[1, 2] * Values[3, 1];
-            var A2312 = Values[1, 2] * Values[2, 3] - Values[1, 3] * Values[2, 2];
-            var A1312 = Values[1, 1] * Values[2, 3] - Values[1, 3] * Values[2, 1];
-            var A1212 = Values[1, 1] * Values[2, 2] - Values[1, 2] * Values[2, 1];
-            var A0313 = Values[1, 0] * Values[3, 3] - Values[1, 3] * Values[3, 0];
-            var A0213 = Values[1, 0] * Values[3, 2] - Values[1, 2] * Values[3, 0];
-            var A0312 = Values[1, 0] * Values[2, 3] - Values[1, 3] * Values[2, 0];
-            var A0212 = Values[1, 0] * Values[2, 2] - Values[1, 2] * Values[2, 0];
-            var A0113 = Values[1, 0] * Values[3, 1] - Values[1, 1] * Values[3, 0];
-            var A0112 = Values[1, 0] * Values[2, 1] - Values[1, 1] * Values[2, 0];
-
-            var det = Values[0, 0] * (Values[1, 1] * A2323 - Values[1, 2] * A1323 + Values[1, 3] * A1223)
-                      - Values[0, 1] * (Values[1, 0] * A2323 - Values[1, 2] * A0323 + Values[1, 3] * A0223)
-                      + Values[0, 2] * (Values[1, 0] * A1323 - Values[1, 1] * A0323 + Values[1, 3] * A0123)
-                      - Values[0, 3] * (Values[1, 0] * A1223 - Values[1, 1] * A0223 + Values[1, 2] * A0123);
-            det = 1 / det;
-
-            return new Mat4
-            (
-                /*Values[0,0] = */det * +(Values[1, 1] * A2323 - Values[1, 2] * A1323 + Values[1, 3] * A1223),
-                /*Values[0,1] = */det * -(Values[0, 1] * A2323 - Values[0, 2] * A1323 + Values[0, 3] * A1223),
-                /*Values[0,2] = */det * +(Values[0, 1] * A2313 - Values[0, 2] * A1313 + Values[0, 3] * A1213),
-                /*Values[0,3] = */det * -(Values[0, 1] * A2312 - Values[0, 2] * A1312 + Values[0, 3] * A1212),
-                /*Values[1,0] = */det * -(Values[1, 0] * A2323 - Values[1, 2] * A0323 + Values[1, 3] * A0223),
-                /*Values[1,1] = */det * +(Values[0, 0] * A2323 - Values[0, 2] * A0323 + Values[0, 3] * A0223),
-                /*Values[1,2] = */det * -(Values[0, 0] * A2313 - Values[0, 2] * A0313 + Values[0, 3] * A0213),
-                /*Values[1,3] = */det * +(Values[0, 0] * A2312 - Values[0, 2] * A0312 + Values[0, 3] * A0212),
-                /*Values[2,0] = */det * +(Values[1, 0] * A1323 - Values[1, 1] * A0323 + Values[1, 3] * A0123),
-                /*Values[2,1] = */det * -(Values[0, 0] * A1323 - Values[0, 1] * A0323 + Values[0, 3] * A0123),
-                /*Values[2,2] = */det * +(Values[0, 0] * A1313 - Values[0, 1] * A0313 + Values[0, 3] * A0113),
-                /*Values[2,3] = */det * -(Values[0, 0] * A1312 - Values[0, 1] * A0312 + Values[0, 3] * A0112),
-                /*Values[3,0] = */det * -(Values[1, 0] * A1223 - Values[1, 1] * A0223 + Values[1, 2] * A0123),
-                /*Values[3,1] = */det * +(Values[0, 0] * A1223 - Values[0, 1] * A0223 + Values[0, 2] * A0123),
-                /*Values[3,2] = */det * -(Values[0, 0] * A1213 - Values[0, 1] * A0213 + Values[0, 2] * A0113),
-                /*Values[3,3] = */det * +(Values[0, 0] * A1212 - Values[0, 1] * A0212 + Values[0, 2] * A0112)
-            );
-        }
-
-        /// <summary>
-        /// Invert matrix via Gauss Jordan
-        /// </summary>
-        public void InvertGaussJordan()
-        {
-            // Gaussian-Jordan with pivot
-            var n = 4; // size of matrix
-
-            var m = this; // alias
-            var inv = new Mat4(); // identity
-
-            double det = 1; // track determinant to check for singular matrix
-
-            // The current pivot row
-            // For each pass, first find the maximum element in the pivot column.
-            for (var row = 0; row < n; row++)
-            {
-                // find max pivot
-                var bestRow = row;
-                for (var irow = row; irow < n; irow++)
-                    if (Abs(m[irow, row]) > Abs(m[bestRow, row]))
-                        bestRow = irow;
-
-                // swap rows in both
-                if (bestRow != row)
-                {
-                    for (var col = 0; col < n; col++)
-                    {
-                        (inv[row,col],inv[bestRow,col]) = (inv[bestRow, col],inv[row, col]);
-
-                        if (col >= row)
-                        { // lower cols all zeros
-                            (m[row, col], m[bestRow, col]) = (m[bestRow, col], m[row, col]);
-                        }
-                    }
-                }
-
-                // Current pivot is m(row,row).
-                // Det is the product of the pivot elts
-                var pivot = m[row, row];
-                det = det * pivot;
-                if (det == 0)
-                    throw new ArgumentException("Cannot inverting a singular matrix");
-
-                for (var col = 0; col < n; col++)
-                {
-                    // divide by pivot to normalize 
-                    inv[row, col] = inv[row, col] / pivot;
-                    if (col >= row)
-                        m[row, col] = m[row, col] / pivot;
-                }
-
-                for (var irow = 0; irow < n; irow++)
-                {
-                    // add multiple of pivot row to cancel terms
-                    if (irow != row)
-                    {
-                        var factor = m[irow, row];
-                        for (var icol = 0; icol < n; icol++)
-                        {
-                            inv[irow, icol] -= factor * inv[row, icol];
-                            m[irow, icol] -= factor * m[row, icol];
-                        }
-                    }
-                }
-            }
-
-            // copy back
-            for (var r = 0; r < n; ++r)
-            for (var c = 0; c < n; ++c)
-                m[r,c] = inv[r,c];
-        }
-
-        public (Mat4 L, Mat4 U) DecomposeLU()
-        {
-//            todo 
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        ///     Indexing 0-3 in each component
-        /// </summary>
-        /// <param1 name="i"></param1>
-        /// <param1 name="j"></param1>
-        /// <returns></returns>
-        public double this[int row, int col]
-        {
-            get => Values[row, col];
-            set => Values[row, col] = value;
-        }
-
-        /// <summary>
-        ///     Set this matrix to the identity
-        /// </summary>
-        public void ToIdentity()
-        {
-            for (var i = 0; i < 4; ++i)
-            for (var j = 0; j < 4; ++j)
-                if (i == j)
-                    Values[i, j] = 1;
-                else
-                    Values[i, j] = 0;
-        }
-
         /// <summary>
         /// Roll, Pitch, Yaw has many variants. This is right handed coord system, right handed angles, Tait-Bryan intrinsic active z-y'-x'' roll, pitch, yaw
         /// Convention from https://en.wikipedia.org/wiki/Conversion_between_quaternions_and_Euler_angles
@@ -460,33 +443,33 @@ namespace Lomont.Numerical
         /// <param name="pitch"></param>
         /// <param name="yaw"></param>
         /// <returns></returns>
-        public static Mat4 FromRollPitchYaw(double roll, double  pitch, double yaw) => RotationXYZ(roll, pitch, yaw);
+        public static Mat4 FromRollPitchYaw(double roll, double pitch, double yaw) => RotationXYZ(roll, pitch, yaw);
 
-    /// <summary>
-    /// Create rotation matrix: X, then Y, then Z
-    /// Right handed coord, right handed angles, Tait-Bryan intrinsic active z-y'-x'' roll, pitch ,yaw
-    /// Multiply object on right of matrix
-    /// </summary>
-    /// <param name="xRadians"></param>
-    /// <param name="yRadians"></param>
-    /// <param name="zRadians"></param>
-    /// <returns></returns>
-    public static Mat4 RotationXYZ(double xRadians, double yRadians, double zRadians)
-    {
-        // expand out in mathematica:
-        var cx = Cos(xRadians);
-        var sx = Sin(xRadians);
-        var cy = Cos(yRadians);
-        var sy = Sin(yRadians);
-        var cz = Cos(zRadians);
-        var sz = Sin(zRadians);
-        return new Mat4( 
-            cy * cz, sx * sy * cz - cx * sz, cx * sy * cz + sx * sz, 0,
-            cy * sz, sx * sy * sz + cx * cz, cx * sy * sz - sx * cz, 0,
-            -sy, sx * cy, cx * cy, 0,
-              0, 0, 0, 1
-        );
-    }
+        /// <summary>
+        /// Create rotation matrix: X, then Y, then Z
+        /// Right handed coord, right handed angles, Tait-Bryan intrinsic active z-y'-x'' roll, pitch ,yaw
+        /// Multiply object on right of matrix
+        /// </summary>
+        /// <param name="xRadians"></param>
+        /// <param name="yRadians"></param>
+        /// <param name="zRadians"></param>
+        /// <returns></returns>
+        public static Mat4 RotationXYZ(double xRadians, double yRadians, double zRadians)
+        {
+            // expand out in mathematica:
+            var cx = Cos(xRadians);
+            var sx = Sin(xRadians);
+            var cy = Cos(yRadians);
+            var sy = Sin(yRadians);
+            var cz = Cos(zRadians);
+            var sz = Sin(zRadians);
+            return new Mat4(
+                cy * cz, sx * sy * cz - cx * sz, cx * sy * cz + sx * sz, 0,
+                cy * sz, sx * sy * sz + cx * cz, cx * sy * sz - sx * cz, 0,
+                -sy, sx * cy, cx * cy, 0,
+                  0, 0, 0, 1
+            );
+        }
 
         /// <summary>
         /// Create X rotation matrix with angle in radians
@@ -504,17 +487,6 @@ namespace Lomont.Numerical
             m[2, 2] = c;
             m[3, 3] = 1;
             return m;
-        }
-
-        // create matrix to align world as specified
-        // matrix takes world frame x,y,z to center eyePoint, frame x',y',z'
-        // where z' is the look direction, x' is up, and y' is to right
-        public static Mat4 LookAt(Vec3 eyePoint, Vec3 atPoint, Vec3 upDirection)
-        {
-            var zAxis = (eyePoint - atPoint).Normalized();
-            var xAxis = Vec3.Cross(upDirection, zAxis).Normalized();
-            var yAxis = Vec3.Cross(zAxis, xAxis).Normalized();
-            return new Mat4(xAxis, yAxis, zAxis, eyePoint);
         }
 
         /// <summary>
@@ -553,6 +525,17 @@ namespace Lomont.Numerical
             return m;
         }
 
+        // create matrix to align world as specified
+        // matrix takes world frame x,y,z to center eyePoint, frame x',y',z'
+        // where z' is the look direction, x' is up, and y' is to right
+        public static Mat4 LookAt(Vec3 eyePoint, Vec3 atPoint, Vec3 upDirection)
+        {
+            var zAxis = (eyePoint - atPoint).Normalized();
+            var xAxis = Vec3.Cross(upDirection, zAxis).Normalized();
+            var yAxis = Vec3.Cross(zAxis, xAxis).Normalized();
+            return new Mat4(xAxis, yAxis, zAxis, eyePoint);
+        }
+
         /// <summary>
         /// Orthographic projection.
         /// Identity if zero (or negative) volume
@@ -586,8 +569,15 @@ namespace Lomont.Numerical
             return ortho;
         }
 
-
-
+        // extract upper left 3x3
+        public Mat3 ToMat3()
+        {
+            var m = new Mat3();
+            for (var i = 0; i < 3; ++i)
+                for (var j = 0; j < 3; ++j)
+                    m[i, j] = this[i, j];
+            return m;
+        }
 
         /// <summary>
         ///     Create a matrix that represents a rotation by the given angle in
@@ -622,35 +612,7 @@ namespace Lomont.Numerical
             Debug.Assert(System.Math.Abs(m.Det - 1.0) < 0.0001);
             return m;
         }
-
-        #region IFormattable Members
-
-        public string ToString(string format, IFormatProvider formatProvider)
-        {
-            return ToString();
-        }
-
-        public override string ToString()
-        {
-            var sb = new StringBuilder();
-            for (var i = 0; i < 4; ++i)
-                sb.Append($"{Values[i, 0]} {Values[i, 1]} {Values[i, 2]} {Values[i, 3]}\n");
-            return sb.ToString();
-        }
-
-        #endregion
-
-        // extract upper left 3x3
-        public Mat3 ToMat3()
-        {
-            var m = new Mat3();
-            for (var i = 0; i < 3; ++i)
-                for (var j = 0; j < 3; ++j)
-                    m[i, j] = this[i, j];
-            return m;
-        }
-
-
+        
         /// <summary>
         /// Create a matrix that rotates the first 3D frame into the second 3D frame.
         /// Each frame is an origin point, and then *directions* for x,y,z from that origin point
@@ -691,32 +653,6 @@ namespace Lomont.Numerical
 
             return t2 * rot * t1;
         }
-
-        /// <summary>
-        /// Return transposed matrix
-        /// </summary>
-        /// <returns></returns>
-        public Mat4 Transposed()
-        {
-            var m = new Mat4();
-            for (var i = 0; i < 4; ++i)
-            for (var j = 0; j < 4; ++j)
-                m[i, j] = this[j, i];
-            return m;
-        }
-
-        /// <summary>
-        /// Transpose in place
-        /// </summary>
-        public void Transpose()
-        {
-            for (var i = 0; i < 4; i++)
-            for (var j = i + 1; j < 4; j++)
-            { // swap
-                (this[i, j], this[j,i]) = (this[j,i], this[i, j]);
-            }
-        }
-
 
 
         /// <summary>
@@ -766,32 +702,6 @@ namespace Lomont.Numerical
 
 
             return m;
-        }
-
-        /// <summary>
-        /// Get any vector normal to v
-        /// </summary>
-        /// <param name="v"></param>
-        /// <returns></returns>
-        public static Vec3 GetANormalVector(Vec3 v)
-        {
-            v = v.Normalized();
-            var (x, y, z) = v.Map(System.Math.Abs); // abs values
-            // x^2+y^2+z^2==1 => one is >= 1/3 => abs x,y,z will have one >= sqrt(1/3) > 1/2
-            // one will be >= 0.5
-            Vec3 ans;
-            if (x > 0.5)
-                ans = new Vec3(y, -x, z);
-            else if (y > 0.5)
-                ans = new Vec3(-y, x, z);
-            else if (z > 0.5)
-                ans = new Vec3(x, -z, y);
-            else
-                throw new ArgumentException($"Logic error in {nameof(GetANormalVector)}");
-
-            Debug.Assert(System.Math.Abs(Vec3.Dot(ans, v)) < 0.0001);
-            return ans;
-
         }
 
         /// <summary>
@@ -882,7 +792,7 @@ namespace Lomont.Numerical
                 // opposite dir
                 // get any normal, and rotate 180 around it
                 // todo - we cheat, combine two rotations, make faster/simpler someday
-                var perp = GetANormalVector(source);
+                var perp = Vec3.GetANormalVector(source);
                 var m1 = CreateRotation(source, perp);
                 var m2 = CreateRotation(perp, dest);
                 return m2 * m1;
@@ -913,87 +823,36 @@ namespace Lomont.Numerical
             return result;
         }
 
-        public bool Equals(Mat4 other)
+        /// <summary>
+        /// Multiply 3-vector by 4-matrix, treating as a transform.
+        /// Performs homogeneous multiplication
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <returns></returns>
+        public static Vec3 operator *(Mat4 a, Vec3 b)
         {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
-            var diff = other - this;
-            var n = diff.MaxNorm();
-
-            return n < 0.0001; // todo- smarter zero compare?
-        }
-
-        public double MaxNorm()
-        {
-            var norm = 0.0;
-            for (var i = 0; i < 4; ++i)
-            for (var j = 0; j < 4; ++j)
-                norm = System.Math.Max(norm, System.Math.Abs(Values[i, j]));
-            return norm;
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((Mat4)obj); // calls above
-        }
-
-        public override int GetHashCode()
-        {
-            // todo?
-            return (Values != null ? Values.GetHashCode() : 0);
-        }
-
-        public static bool operator ==(Mat4 a, Mat4 b)
-        {
-            return a.Equals(b);
-        }
-
-        public static bool operator !=(Mat4 a, Mat4 b)
-        {
-            return !(a == b);
+            // treat 3 vector as 4 vector with 1 component in last spot
+            var x = a[0, 0] * b[0] + a[0, 1] * b[1] + a[0, 2] * b[2] + a[0, 3];
+            var y = a[1, 0] * b[0] + a[1, 1] * b[1] + a[1, 2] * b[2] + a[1, 3];
+            var z = a[2, 0] * b[0] + a[2, 1] * b[1] + a[2, 2] * b[2] + a[2, 3];
+            var w = a[3, 0] * b[0] + a[3, 1] * b[1] + a[3, 2] * b[2] + a[3, 3];
+            return new Vec3(x / w, y / w, z / w);
         }
 
         /// <summary>
-        /// Given three non-collinear points, create a mapping that takes them into
-        /// the xy plane of the standard frame.
-        /// Points are treated as x axis, then origin, then y axis is created in plane with p2 in top half plane
-        /// Returns forward map (item to xy plane) and inverse map (plane x to item)
+        /// Convert a normal, applies rotation part of matrix to vector
         /// </summary>
-        /// <param name="p0"></param>
-        /// <param name="p1"></param>
-        /// <param name="p2"></param>
+        /// <param name="v"></param>
         /// <returns></returns>
-        public static (Mat4, Mat4) MapFrame(Vec3 p0, Vec3 p1, Vec3 p2)
+        public Vec3 ConvertNormal(Vec3 v)
         {
-            var x = (p0 - p1).Normalized();
-            var t = (p2 - p1).Normalized(); // place in upper half plane
-            var z = Vec3.Cross(x, t).Normalized();
-            var y = Vec3.Cross(z, x).Normalized();
-
-            // xy plane to item....
-            var q = new Mat4();
-            (q[0, 0], q[1, 0], q[2, 0]) = x;
-            (q[0, 1], q[1, 1], q[2, 1]) = y;
-            (q[0, 2], q[1, 2], q[2, 2]) = z; // rotation only
-
-            // column matrix x y z p1 is transform, we want inverse
-            // cheat by inverting rotation via transpose, and inverting translation....
-            var p = q.Transposed(); // transpose inverts rotation
-
-            (p[0, 0], p[0, 1], p[0, 2]) = x;
-            (p[1, 0], p[1, 1], p[1, 2]) = y;
-            (p[2, 0], p[2, 1], p[2, 2]) = z;
-
-            q = Translation(p1) * q; // translate to item
-            p = p * Translation(-p1); // translate back
-
-            // better be inverses
-            Debug.Assert((p * q - Identity).MaxNorm() < 0.001);
-            return (p, q);
+            var zero = new Vec3(0, 0, 0);
+            return this * v - this * zero;
         }
+
+        #endregion
+
 
     }
 

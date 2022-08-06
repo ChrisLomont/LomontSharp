@@ -1,6 +1,7 @@
 ﻿using System;
 using static System.Math;
 using System.Numerics;
+using System.Diagnostics;
 
 namespace Lomont.Numerical
 {
@@ -8,6 +9,7 @@ namespace Lomont.Numerical
     /// Represent a 3D vector
     /// </summary>
     public class Vec3 :
+        Lomont.Numerical.Vector<double>,
         // basic generic support
         IAdditiveIdentity<Vec3, Vec3>,
         IAdditionOperators<Vec3, Vec3, Vec3>,
@@ -16,21 +18,47 @@ namespace Lomont.Numerical
         IDistance<Vec3, Vec3, double>
     {
 
-        public Vec3 Map(Func<double, double> func)
+        #region Constants
+        const int size = 3;
+
+        public static Vec3 Zero { get; } = new Vec3(0, 0, 0);
+        public static Vec3 One { get; } = new Vec3(1, 1, 1);
+        public static Vec3 Origin { get; } = new Vec3(0, 0, 0);
+        public static Vec3 XAxis { get; } = new Vec3(1, 0, 0);
+        public static Vec3 YAxis { get; } = new Vec3(0, 1, 0);
+        public static Vec3 ZAxis { get; } = new Vec3(0, 0, 1);
+
+        /// <summary>
+        /// Vector of min values in each slot
+        /// </summary>
+        public static Vec3 Min { get; } = new Vec3(double.MinValue, double.MinValue, double.MinValue);
+
+        /// <summary>
+        /// Vector of max values in each slot
+        /// </summary>
+        public static Vec3 Max { get; } = new Vec3(double.MaxValue, double.MaxValue, double.MaxValue);
+
+        #endregion
+
+        #region Properties
+        public double X { get => Values[0]; set => Values[0] = value; }
+        public double Y { get => Values[1]; set => Values[1] = value; }
+        public double Z { get => Values[2]; set => Values[2] = value; }
+        #endregion
+
+        #region Constructors, Deconstructor, Set
+
+        public Vec3(double [] values) : base(size,values)
         {
-            return new Vec3(func(X), func(Y), func(Z));
+            System.Diagnostics.Trace.Assert(Dimension == size);
         }
 
-        public Vec3(Vec3 v) : this(v.X,v.Y,v.Z)
+        public Vec3(Vec3 v) : base(v)
         {
+            System.Diagnostics.Trace.Assert(Dimension == size);
         }
 
-
-        public double X { get; set; }
-        public double Y { get; set; }
-        public double Z { get; set; }
-
-        public Vec3(double x = 0, double y = 0, double z = 0)
+        public Vec3(double x = 0, double y = 0, double z = 0) : base(size)
         {
             X = x;
             Y = y;
@@ -44,39 +72,78 @@ namespace Lomont.Numerical
             z = Z;
         }
 
+        public void Set(double x, double y, double z)
+        {
+            X = x;
+            Y = y;
+            Z = z;
+        }
+
+        public void Set(Vec3 vector3) => Set(vector3.X,vector3.Y,vector3.Z);
+
+        #endregion
+
+        #region Functor
+
+        public Vec3 Map(Func<double, double> func) => new Vec3(base.Map(func).Values);
+
+        public static Vec3 Apply(Vec3 a, Vec3 b, Func<double, double, double> func) => new Vec3(Vector<double>.Apply(a,b,func).Values);
+
+        #endregion
+
+        #region Math operators
+        public static Vec3 operator +(Vec3 a) => a;
+        public static Vec3 operator -(Vec3 a) => new Vec3((-((Vector<double>)a)).Values);
+        public static Vec3 operator +(Vec3 a, Vec3 b) => new Vec3(((Vector<double>)a + (Vector<double>)b).Values);
+        public static Vec3 operator -(Vec3 a, Vec3 b) => new Vec3(((Vector<double>)a - (Vector<double>)b).Values);
+        public static Vec3 operator *(double a, Vec3 b) => new Vec3(b.Map(v=>a*v).Values);
+        public static Vec3 operator *(Vec3 b, double a) => a * b;
+        public static Vec3 operator /(Vec3 a, double b) => (1.0 / b) * a;
+        #endregion
+
+        #region Linear Algebra
+
         /// <summary>
-        /// True if all components exactly zero
+        /// return unit length in this direction,
+        /// or 0,0,0 if already 0
         /// </summary>
-        bool IsNull => X == 0 && Y == 0 && Z == 0;
-
-        public static Vec3 operator +(Vec3 a, Vec3 b)
-        {
-            return new Vec3(a.X + b.X, a.Y + b.Y, a.Z + b.Z);
-        }
-        public static Vec3 operator -(Vec3 a)
-        {
-            return new Vec3(-a.X, -a.Y, -a.Z);
+        public Vec3 Normalized()
+        { // todo - merge with Unit versions
+            var d = Length;
+            if (Length < 1e-6)
+                return new Vec3(0, 0, 0);
+            return this * 1.0 / d;
         }
 
-        public static Vec3 operator -(Vec3 a, Vec3 b)
+        /// <summary>
+        /// make this a unit vector
+        /// </summary>
+        public Vec3 Normalize()
         {
-            return new Vec3(a.X - b.X, a.Y - b.Y, a.Z - b.Z);
+            if (Length == 0) return this;
+            var a = this;
+            a /= Length;
+            return this;
         }
 
-        public static Vec3 operator *(double a, Vec3 b)
+        /// <summary>
+        /// Return a unit length vector in this direction
+        /// </summary>
+        /// <returns></returns>
+        public static Vec3 Unit(Vec3 a)
         {
-            return new Vec3(a * b.X, a * b.Y, a * b.Z);
+            return a / a.Length;
         }
 
-        public static Vec3 operator *(Vec3 b, double a)
+        /// <summary>
+        /// Return a unit length vector in this direction
+        /// </summary>
+        /// <returns></returns>
+        public Vec3 Unit()
         {
-            return new Vec3(a * b.X, a * b.Y, a * b.Z);
+            return this / Length;
         }
 
-        public static Vec3 operator /(Vec3 a, double b)
-        {
-            return (1.0 / b) * a;
-        }
 
         public static Vec3 Cross(Vec3 a, Vec3 b)
         {
@@ -95,15 +162,10 @@ namespace Lomont.Numerical
         public static Mat3 CrossOperator(Vec3 v)
         {
             return new Mat3(
-                0, -v.Z, v.Y, 
-                v.Z, 0, -v.X, 
+                0, -v.Z, v.Y,
+                v.Z, 0, -v.X,
                 -v.Y, v.X, 0
                 );
-        }
-
-        public static double Dot(Vec3 a, Vec3 b)
-        {
-            return a.X * b.X + a.Y * b.Y + a.Z * b.Z;
         }
 
         /// <summary>
@@ -121,119 +183,37 @@ namespace Lomont.Numerical
                 );
         }
 
-
-        public void Set(double x, double y, double z)
-        {
-            X = x;
-            Y = y;
-            Z = z;
-        }
-
-        public void Set(Vec3 vector3)
-        {
-            X = vector3.X;
-            Y = vector3.Y;
-            Z = vector3.Z;
-        }
-
-        /// <summary>
-        ///     Create a random vector uniformly by area on the unit sphere
-        /// Requires two uniformly random values on [0,1]
-        /// </summary>
-        /// <returns></returns>
-        public static Vec3 SphericalRandom(double r1, double r2)
-        {
-            var u = r1 * 2 - 1;// RandomManager.Random.NextDouble() * 2 - 1; // [-1,1]
-            var phi = r2 * 2 * System.Math.PI; // RandomManager.Random.NextDouble() * 2 * System.Math.PI; // [0,2Pi]
-            var t = System.Math.Sqrt(1 - u * u);
-            var x = t * System.Math.Cos(phi);
-            var y = t * System.Math.Sin(phi);
-            var z = u;
-            return new Vec3(x, y, z);
-        }
-
         public double Length => System.Math.Sqrt(LengthSquared);
-        public double LengthSquared => Dot(this, this);
+
+        #endregion
+
+        #region Geometric
 
         /// <summary>
-        ///     Return a unit length vector in this direction
+        /// Get any vector normal to v
         /// </summary>
+        /// <param name="v"></param>
         /// <returns></returns>
-        public static Vec3 Unit(Vec3 a)
+        public static Vec3 GetANormalVector(Vec3 v)
         {
-            return a / a.Length;
-        }
+            v = v.Normalized();
+            var (x, y, z) = v.Map(System.Math.Abs); // abs values
+            // x^2+y^2+z^2==1 => one is >= 1/3 => abs x,y,z will have one >= sqrt(1/3) > 1/2
+            // one will be >= 0.5
+            Vec3 ans;
+            if (x > 0.5)
+                ans = new Vec3(y, -x, z);
+            else if (y > 0.5)
+                ans = new Vec3(-y, x, z);
+            else if (z > 0.5)
+                ans = new Vec3(x, -z, y);
+            else
+                throw new ArgumentException($"Logic error in {nameof(GetANormalVector)}");
 
-        /// <summary>
-        ///     Return a unit length vector in this direction
-        /// </summary>
-        /// <returns></returns>
-        public Vec3 Unit()
-        {
-            return this / Length;
-        }
-
-        /// <summary>
-        /// return unit length in this direction,
-        /// or 0,0,0 if already 0
-        /// </summary>
-        public Vec3 Normalized()
-        { // todo - merge with Unit versions
-            var d = Length;
-            if (Length < 1e-6)
-                return new Vec3(0, 0, 0);
-            return this * 1.0 / d;
-        }
-
-        /// <summary>
-        /// make this a unit vector
-        /// or 0,0,0 if already 0
-        /// </summary>
-        public void Normalize()
-        {
-            var d = Length;
-            X /= d;
-            Y /= d;
-            Z /= d;
-        }
-
-
-        /// <summary>
-        /// Linear interpolation from a to b
-        /// TODO - make generic in utility when dotnet adds INumeric
-        /// </summary>
-        /// <param name="a"></param>
-        /// <param name="b"></param>
-        /// <param name="t"></param>
-        /// <returns></returns>
-        public static Vec3 LinearInterpolation(Vec3 a, Vec3 b, double t) => a + (b - a) * t;
-
-        /// <summary>
-        /// Return angle between vectors in radians
-        /// </summary>
-        /// <returns></returns>
-        public static double AngleBetween(Vec3 a, Vec3 b) => Acos(Dot(a, b) / (a.Length * b.Length));
-
-        /// <summary>
-        /// Return max abs value of a component
-        /// </summary>
-        public double MaxNorm => Max(Abs(X), Max(Abs(Y),Abs(Z)));
-
-        public static Vec3 ComponentwiseMin(Vec3 a, Vec3 b)
-        {
-            return Componentwise(a, b, Math.Min);
+            Debug.Assert(System.Math.Abs(Vec3.Dot(ans, v)) < 0.0001);
+            return ans;
 
         }
-        public static Vec3 ComponentwiseMax(Vec3 a, Vec3 b)
-        {
-            return Componentwise(a, b, Math.Max);
-        }
-
-        public static Vec3 Componentwise(Vec3 a, Vec3 b, Func<double, double, double> func)
-        {
-            return new Vec3(func(a.X, b.X), func(a.Y, b.Y), func(a.Z,b.Z));
-        }
-
 
         /// <summary>
         /// Distance between points
@@ -262,63 +242,48 @@ namespace Lomont.Numerical
             return d3.Unit();
         }
 
+        /// <summary>
+        /// Linear interpolation from a to b
+        /// TODO - make generic in utility when dotnet adds INumeric
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        /// <param name="t"></param>
+        /// <returns></returns>
+        public static Vec3 LinearInterpolation(Vec3 a, Vec3 b, double t) => a + (b - a) * t;
 
-        public double this[int i]
+        /// <summary>
+        /// Return angle between vectors in radians
+        /// </summary>
+        /// <returns></returns>
+        public static double AngleBetween(Vec3 a, Vec3 b) => Acos(Dot(a, b) / (a.Length * b.Length));
+
+        /// <summary>
+        ///     Create a random vector uniformly by area on the unit sphere
+        /// Requires two uniformly random values on [0,1]
+        /// </summary>
+        /// <returns></returns>
+        public static Vec3 SphericalRandom(double r1, double r2)
         {
-            get => i switch
-            {
-                0 => X,
-                1 => Y,
-                2 => Z,
-                3 => 1, // homogeneous
-                _ => throw new ArgumentOutOfRangeException()
-            };
-            set
-            {
-                switch (i)
-                {
-                    case 0:
-                        X = value;
-                        break;
-                    case 1:
-                        Y = value;
-                        break;
-                    case 2:
-                        Z = value;
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-
-
-            }
+            var u = r1 * 2 - 1;// RandomManager.Random.NextDouble() * 2 - 1; // [-1,1]
+            var phi = r2 * 2 * System.Math.PI; // RandomManager.Random.NextDouble() * 2 * System.Math.PI; // [0,2Pi]
+            var t = System.Math.Sqrt(1 - u * u);
+            var x = t * System.Math.Cos(phi);
+            var y = t * System.Math.Sin(phi);
+            var z = u;
+            return new Vec3(x, y, z);
         }
 
-        #region Constants
-
-        public static Vec3 Zero { get; } = new Vec3(0, 0, 0);
-        public static Vec3 One { get; } = new Vec3(1, 1, 1);
-
-        public static Vec3 Origin { get; } = new Vec3(0, 0, 0);
-
-        public static Vec3 XAxis { get; } = new Vec3(1, 0, 0);
-
-        public static Vec3 YAxis { get; } = new Vec3(0, 1, 0);
-
-        public static Vec3 ZAxis { get; } = new Vec3(0, 0, 1);
-
-        /// <summary>
-        /// Vector of min values in each slot
-        /// </summary>
-        public static Vec3 Min { get; } = new Vec3(double.MinValue, double.MinValue, double.MinValue);
-
-        /// <summary>
-        /// Vector of max values in each slot
-        /// </summary>
-        public static Vec3 Max { get; } = new Vec3(double.MaxValue, double.MaxValue, double.MaxValue);
-
-
         #endregion
+
+        public static Vec3 ComponentwiseMin(Vec3 a, Vec3 b) =>
+            new Vec3(Componentwise((Vector<double>)a, (Vector<double>)b, Math.Min).Values);
+
+        public static Vec3 ComponentwiseMax(Vec3 a, Vec3 b) =>
+            new Vec3(Componentwise((Vector<double>)a, (Vector<double>)b, Math.Max).Values);
+
+        public static Vec3 Componentwise(Vec3 a, Vec3 b, Func<double,double,double> func) =>
+            new Vec3(Componentwise((Vector<double>)a, (Vector<double>)b, func).Values);
 
 
         #region Generic
@@ -340,11 +305,6 @@ namespace Lomont.Numerical
         }
 
         #endregion
-
-        public override string ToString()
-        {
-            return String.Format("{0},{1},{2}", X, Y, Z);
-        }
 
     }
 

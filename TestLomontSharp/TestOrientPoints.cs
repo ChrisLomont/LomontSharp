@@ -8,7 +8,7 @@ namespace TestLomontSharp
         public void Test1()
         {
             Assert.True(Lomont.Geometry.OrientPoints.TestOrientation3D());
-            // todo - also test 2d, currently broken?
+            Assert.True(Lomont.Geometry.OrientPoints.TestOrientation2D());
         }
     }
 }
