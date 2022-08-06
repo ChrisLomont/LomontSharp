@@ -11,6 +11,7 @@
     <Copyright>Copyright Chris Lomont 2020-2022</Copyright>
     <PackageProjectUrl>https://github.com/ChrisLomont/LomontSharp</PackageProjectUrl>
     <RepositoryUrl>https://github.com/ChrisLomont/LomontSharp</RepositoryUrl>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
