@@ -25,17 +25,26 @@ namespace Lomont.WPF.MVVM
         /// <summary>
         /// Is execution allowed
         /// </summary>
-        readonly Predicate<object> canExecute;
+        readonly Predicate<object>? canExecute;
 
         /// <summary>
         /// What to execute
         /// </summary>
-        readonly Action<object> execute;
+        readonly Action<object?>? execute;
 
 
         #endregion // Fields
 
         #region Constructors
+
+        /// <summary>
+        /// Create a new command that executes the given delegate when fired.
+        /// </summary>
+        /// <param name="execute">The action to execute</param>
+        public RelayCommand(Action execute)
+            : this(o=>execute(), null)
+        {
+        }
 
         /// <summary>
         /// Create a new command that executes the given delegate when fired.
@@ -51,7 +60,7 @@ namespace Lomont.WPF.MVVM
         /// </summary>
         /// <param name="execute">The action to execute.</param>
         /// <param name="canExecute">The predicate to determine if action is allowable.</param>
-        public RelayCommand(Action<object> execute, Predicate<object> canExecute)
+        public RelayCommand(Action<object?> execute, Predicate<object?>? canExecute)
         {
             if (execute == null)
                 throw new ArgumentNullException(nameof(execute));
@@ -69,7 +78,7 @@ namespace Lomont.WPF.MVVM
         /// <param name="parameter"></param>
         /// <returns></returns>
         [DebuggerStepThrough]
-        public bool CanExecute(object parameter)
+        public bool CanExecute(object? parameter)
         {
             return canExecute == null || canExecute(parameter);
         }
@@ -77,7 +86,7 @@ namespace Lomont.WPF.MVVM
         /// <summary>
         /// Event to trigger execution state changes.
         /// </summary>
-        public event EventHandler CanExecuteChanged
+        public event EventHandler? CanExecuteChanged
         {
             add { CommandManager.RequerySuggested += value; }
             remove { CommandManager.RequerySuggested -= value; }
@@ -87,9 +96,14 @@ namespace Lomont.WPF.MVVM
         /// Execute the command action on the given parameter.
         /// </summary>
         /// <param name="parameter">The parameter to execute</param>
-        public void Execute(object parameter)
+        public void Execute(object? parameter)
         {
-            execute(parameter);
+            if (CanExecute(parameter)
+                && execute != null
+                )
+            {
+                execute(parameter);
+            }
         }
 
         #endregion // ICommand Members

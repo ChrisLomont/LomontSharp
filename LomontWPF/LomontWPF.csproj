@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <UseWPF>true</UseWPF>
     <RootNamespace>Lomont.WPF</RootNamespace>
-    <Version>0.4.0</Version>
+    <Version>0.4.1</Version>
     <Authors>Chris Lomont</Authors>
     <Description>Chris Lomont commonly used WPF components</Description>
     <Copyright>Copyright Chris Lomont 2020-2022</Copyright>

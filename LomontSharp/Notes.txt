@@ -15,7 +15,7 @@ DONE 5. mat, vec copy
 6. mat, vec: 0,1 items can be modified?! Same as axes? return copies?
 DONE 7. orient pts needs fixed
 
-8. better mvvm libs: Set, Get ppty, observable base, base, etc. - maybe replace with Microsoft?
+DONE 8. better mvvm libs: Set, Get ppty, observable base, base, etc. - maybe replace with Microsoft?
 
 
 Not kept up to date - this list now old!

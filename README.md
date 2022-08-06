@@ -54,6 +54,8 @@ Testing for all the above.
 Much more listed in the code TODO section. I have decades of code to pull pieces from and clean them up and generalize them.
 
 ## History
+Release 0.6.4 - 8/6/2022 - bug fixes, linear algebra unification
+
 Release 0.6.3 - 8/5/2022 - added Vec4, matrix Trace & Cofactors & scalar & add/sub, Gaussian rand, LU factorization and solver, small degree (2,3,4) polynomial direct root solvers, Horn point cloud alignment
 
 Release 0.6.2 - 6/17/2022 - added b-spline support, moved to dotnet 7.0 preview, added some INumeric generic math support.

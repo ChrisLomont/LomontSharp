@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 
 namespace Lomont.WPF.MVVM
 {
@@ -89,11 +90,41 @@ namespace Lomont.WPF.MVVM
         /// <param name="field">The field backing to update on change</param>
         /// <param name="value">The new value</param>
         /// <param name="selectorExpression">An expression like ()=>PropName giving the name of the property to raise.</param>
-        protected bool SetField<T>(ref T field, T value, Expression<Func<T>> selectorExpression)
+        protected bool SetField<T>(ref T field, T newValue, Expression<Func<T>> selectorExpression)
         {
-            if (EqualityComparer<T>.Default.Equals(field, value)) return false;
-            field = value;
+            if (EqualityComparer<T>.Default.Equals(field, newValue)) return false;
+            field = newValue;
             NotifyPropertyChanged(selectorExpression);
+            return true;
+        }
+
+        /// <summary>
+        /// Action is cur,next, after change
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="field"></param>
+        /// <param name="newValue"></param>
+        /// <param name="action"></param>
+        /// <param name="broadcast"></param>
+        /// <param name="propertyName"></param>
+        /// <returns></returns>
+        protected bool Set<T>(
+            ref T field,
+            T? newValue = default(T),
+            Action<T?, T?>? preAction = null,
+            Action<T?,T?>?postAction = null,
+            bool broadcast = false,
+            [CallerMemberName] string? propertyName = null
+            )
+        {
+            if (EqualityComparer<T>.Default.Equals(field, newValue)) return false;
+            if (preAction != null)
+                preAction(field,newValue);
+            var old = field;
+            field = newValue;
+            NotifyPropertyChanged(propertyName);
+            if (postAction != null)
+                postAction(old, newValue);
             return true;
         }
 
