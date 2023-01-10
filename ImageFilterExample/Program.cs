@@ -2,6 +2,7 @@
 using Lomont.Algorithms;
 
 var p = @"LomontSharp\TestData\Lenna.png";
+//p = @"LomontSharp\TestData\rgb.png";
 while (p.Length < 100 && !File.Exists(p))
     p = @"..\" + p;
 
@@ -9,6 +10,26 @@ Console.WriteLine($"{p} {File.Exists(p)}");
 
 // get image to test
 var src = new SimpleBitmap(p);
+
+//Console.WriteLine($"{src.GetPixel(255, 255)}");
+
+#if true
+// speckle it with noise
+var rand = new Random(1234);
+for (var pass = 0; pass < src.Height * src.Width /100; ++pass)
+{
+    var i = rand.Next(src.Width);
+    var j = rand.Next(src.Height);
+    var (r,g,b,a) = src.GetPixel(i, j);
+    r = Int32.Clamp(r + rand.Next(-128,128), 0, 255);
+    g = Int32.Clamp(g + rand.Next(-128,128), 0, 255);
+    b = Int32.Clamp(b + rand.Next(-128,128), 0, 255);
+    src.SetPixel(i,j,r,g,b);
+}
+#endif
+
+src.Save("noisy.png");
+//return;
 
 Filter(src, 1.0f).Save("gauss1.png");
 Filter(src, 3.0f).Save("gauss3.png");
@@ -52,7 +73,9 @@ SimpleBitmap Filter(SimpleBitmap src, float spatialSigma = 3.0f, float intensity
     }
 
     // repack layers
-    return Merge(rf, gf, bf, af);
+    var ans = Merge(rf, gf, bf, af);
+    Console.WriteLine("Done...");
+    return ans;
 
 
     (float[,] r, float[,] g, float[,] b, float[,] a) Split(SimpleBitmap src)

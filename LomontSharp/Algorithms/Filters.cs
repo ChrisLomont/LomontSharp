@@ -143,8 +143,8 @@ public static class Filters
         var (w, h) = (data.GetLength(0), data.GetLength(1));
         var dst = new float[w, h];
         var i2 = intensitySigma * intensitySigma;
-        var sc2 = i2 > 1e-10 ? 1.0f / MathF.Sqrt(2 * MathF.PI * i2) : 1;
-        var sc = i2 > 1e-10 ? -1.0f / (2 * MathF.PI) : 0;
+        var scale1 = i2 > 1e-10 ? 1.0f / MathF.Sqrt(2 * MathF.PI * i2) : 1;
+        var scale2 = i2 > 1e-10 ? -1.0f / (2 * MathF.PI * i2) : 0;
 
         for (var j = 0; j < h; ++j)
         for (var i = 0; i < w; ++i)
@@ -158,7 +158,7 @@ public static class Filters
                 {
                     var q = Get(data, w, h, i + di, j + dj);
                     var dI = p - q; // intensity difference
-                    var weight = sc2*kernel[di + sz] * kernel[dj + sz] * MathF.Exp(sc * Math.Abs(dI));
+                    var weight = scale1*kernel[di + sz] * kernel[dj + sz] * MathF.Exp(scale2 * Math.Abs(dI));
                     s += weight * q;
                     weightSum += weight;
                 }

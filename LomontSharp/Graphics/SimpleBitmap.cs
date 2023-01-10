@@ -1,4 +1,6 @@
-﻿using System.Drawing;
+﻿using System;
+using System.Drawing;
+using System.Drawing.Imaging;
 using Lomont.Graphics.Fonts;
 
 namespace Lomont.Graphics;
@@ -18,6 +20,7 @@ public class SimpleBitmap
     public SimpleBitmap(string filename)
     {
         var bmp = new Bitmap(filename);
+        //Console.WriteLine(bmp.PixelFormat);
         (Width, Height) = (bmp.Width, bmp.Height);
         image = new byte[Width*Height*channels];
         // todo  - much faster to get pixel type, make some per type blitters
@@ -39,7 +42,7 @@ public class SimpleBitmap
     bool Legal(int i, int j) => 0 <= i && i < Width && 0 <= j && j < Height;
     int Index(int i, int j) => (i + j * Width) * channels;
 
-    public void SetPixel(int i, int j, int red, int blue, int green, int alpha = 255)
+    public void SetPixel(int i, int j, int red, int green, int blue, int alpha = 255)
     {
         if (!Legal(i, j)) return;
         var t = Index(i,j);
@@ -81,16 +84,17 @@ public class SimpleBitmap
 
     public void Save(string filename)
     {
-        var bmp = new Bitmap(Width, Height);
+        var bmp = new Bitmap(Width, Height, PixelFormat.Format32bppArgb);
 
         // slow - make different? derive from this?
-        for (var i  =0; i < Width; ++i)
         for (var j = 0; j < Height; ++j)
+        for (var i = 0; i < Width; ++i)
         {
             var (r, g, b, a) = GetPixel(i, j);
             var c = System.Drawing.Color.FromArgb(a, r, g, b);
             bmp.SetPixel(i, j,c);
         }
+
         bmp.Save(filename);
     }
 
