@@ -12,7 +12,7 @@ This is to make my commonly used pieces of code easier for me to reuse.
 
 ### LomontSharp
 
-Main piece should be as portable as possible, currently .NET 5.0, hopefully to 6.0 soon so I can use INumeric to make nicer math pieces.
+Main piece should be as portable as possible, currently .NET 5.0, hopefully to 6.0 soon so I can use INumeric to make nicer math pieces. (Update: Now 7.0, uses INumeric)
 
 Base classes. Includes:
 
@@ -55,7 +55,7 @@ Much more listed in the code TODO section. I have decades of code to pull pieces
 
 ## History
 
-added BinaryTree
+Release 0.6.5 - 1/18/2023 - added BinaryTree, fixed bitmap colors, added bilateral and Gaussian filters
 
 Release 0.6.4 - 8/6/2022 - bug fixes, linear algebra unification
 
