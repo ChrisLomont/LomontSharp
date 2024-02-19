@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Lomont.Information;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace TestLomontSharp
 {
@@ -17,9 +18,9 @@ namespace TestLomontSharp
             var check = "123456789";
             var checkBytes = ASCIIEncoding.ASCII.GetBytes(check);
 
-            Assert.AreEqual(CRC.CRC_32(checkBytes), 0xCBF43926);
+            ClassicAssert.AreEqual(CRC.CRC_32(checkBytes), 0xCBF43926);
             
-            //Assert.AreEqual(CRC.CRC_32K(checkBytes),
+            //ClassicAssert.AreEqual(CRC.CRC_32K(checkBytes),
             //    0x2D3DD0AE
             //    0xE4C03E42
             //        );
@@ -39,19 +40,19 @@ namespace TestLomontSharp
             c1.Start();
             c1.Add(checkBytes);
             var crc = c1.Finish();
-            Assert.AreEqual(crc, 0xCBF43926);
+            ClassicAssert.AreEqual(crc, 0xCBF43926);
 
             c1.Start();
             foreach (var b in checkBytes )
                 c1.Add(b);
             crc = c1.Finish();
-            Assert.AreEqual(crc, 0xCBF43926);
+            ClassicAssert.AreEqual(crc, 0xCBF43926);
         }
 
         void SameTbl(uint [] tbl1, uint [] tbl2)
         {
             for (var i = 0; i < tbl1.Length; ++i)
-                Assert.AreEqual(tbl1[i], tbl2[i]);
+                ClassicAssert.AreEqual(tbl1[i], tbl2[i]);
         }
 
         [Test]
@@ -88,7 +89,7 @@ namespace TestLomontSharp
             var check = "123456789";
             var checkBytes = ASCIIEncoding.ASCII.GetBytes(check);
             var crc24 = CRC.CRC_24Q(checkBytes);
-            Assert.AreEqual(crc24, 0x00CDE703);
+            ClassicAssert.AreEqual(crc24, 0x00CDE703);
         }
 
         // [Test]
@@ -108,7 +109,7 @@ namespace TestLomontSharp
             // var crc3 = crc.Hash(new byte[] { 0x4 });
             // var crc4 = crc.Hash(new byte[] { 0x8 });
             // var crc5 = crc.Hash(new byte[] { 0xF });
-            // Assert.True(false);
+            // ClassicAssert.True(false);
 
         }
 
@@ -136,7 +137,7 @@ namespace TestLomontSharp
                 }
             }
 
-            Assert.AreEqual(failed.Count, 0);
+            ClassicAssert.AreEqual(failed.Count, 0);
 
 
         }

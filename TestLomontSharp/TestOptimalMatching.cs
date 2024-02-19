@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Lomont.Algorithms;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace TestLomontSharp
 {
@@ -15,9 +16,9 @@ namespace TestLomontSharp
             // 2,1,0,3 (0 indexed)
             var ans2 = OptimalMatching.Find(mat);
             
-            Assert.True(ans2.Length == ans.Length);
+            ClassicAssert.True(ans2.Length == ans.Length);
             for (var i =0; i < ans.Length; ++i)
-                Assert.True(ans[i] == ans2[i]);
+                ClassicAssert.True(ans[i] == ans2[i]);
         }
 
         [Test]

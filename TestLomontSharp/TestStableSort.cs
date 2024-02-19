@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Lomont.Algorithms;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace TestLomontSharp
 {
@@ -48,9 +49,9 @@ namespace TestLomontSharp
                 for (var i = 0; i < len; ++i)
                 for (var j = i+1; j < len; ++j)
                 {
-                    //Assert.True(list1[i].text <= list1[j].text);
+                    //ClassicAssert.True(list1[i].text <= list1[j].text);
                     if (list1[i].text != list1[j].text) continue;
-                    Assert.True(list1[i].index < list1[j].index);
+                    ClassicAssert.True(list1[i].index < list1[j].index);
                 }
 
             }

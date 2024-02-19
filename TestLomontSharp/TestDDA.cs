@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Linq;
 using Lomont.Algorithms;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace TestLomontSharp
 {
@@ -127,8 +128,8 @@ namespace TestLomontSharp
 
                 TestAll(p1, p2, seq =>
                     {
-                        Assert.True(seq[0] == p1);
-                        Assert.True(seq.Last() == p2);
+                        ClassicAssert.True(seq[0] == p1);
+                        ClassicAssert.True(seq.Last() == p2);
                     }
                 );
             }
@@ -146,7 +147,7 @@ namespace TestLomontSharp
                 var seqs = MakeN(p1, p2);
 
                 foreach (var seq in seqs)
-                    Assert.True(Same(seqs[0], seq, 1)); // todo - dist to 0
+                    ClassicAssert.True(Same(seqs[0], seq, 1)); // todo - dist to 0
             }
         }
 
@@ -162,11 +163,11 @@ namespace TestLomontSharp
                 var s1 = Compute2a(p1, p2);
                 var s2 = Compute2a(p2, p1);
 
-                Assert.True(s1.Count == n);
-                Assert.True(s2.Count == n);
+                ClassicAssert.True(s1.Count == n);
+                ClassicAssert.True(s2.Count == n);
 
                 s2.Reverse();
-                Assert.True(Same(s1, s2));
+                ClassicAssert.True(Same(s1, s2));
             }
         }
 
@@ -181,12 +182,12 @@ namespace TestLomontSharp
             TestAll(p1, p2,
                 lst =>
                 {
-                    Assert.True(lst.Count == 11);
+                    ClassicAssert.True(lst.Count == 11);
 
                     for (var i = 0; i < lst.Count; ++i)
                     {
                         var p = lst[i];
-                        Assert.True(p.X == i && p.Y == i);
+                        ClassicAssert.True(p.X == i && p.Y == i);
                     }
 
                 }

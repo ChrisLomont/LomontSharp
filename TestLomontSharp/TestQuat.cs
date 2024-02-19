@@ -4,6 +4,7 @@ using System.Linq;
 using Lomont.Algorithms;
 using Lomont.Numerical;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace TestLomontSharp
 {
@@ -33,15 +34,15 @@ namespace TestLomontSharp
                 //var d5 = Quat.AngleBetween2(q1, -q2);
                 //var d6 = Quat.AngleBetween2(q2, q1);
 
-                Assert.True(Math.Abs(d1 - d2) < tol);
-                Assert.True(Math.Abs(d1 - d3) < tol);
+                ClassicAssert.True(Math.Abs(d1 - d2) < tol);
+                ClassicAssert.True(Math.Abs(d1 - d3) < tol);
 
-                Assert.True(d1<=Math.PI);
-                Assert.True(0 <= d1);
+                ClassicAssert.True(d1<=Math.PI);
+                ClassicAssert.True(0 <= d1);
 
                 //Console.WriteLine($"{d4} {d6}");
-                //Assert.True(Math.Abs(d4 - d5) < tol);
-                //Assert.True(Math.Abs(d4 - d6) < tol);
+                //ClassicAssert.True(Math.Abs(d4 - d5) < tol);
+                //ClassicAssert.True(Math.Abs(d4 - d6) < tol);
             }
 
             // test edges

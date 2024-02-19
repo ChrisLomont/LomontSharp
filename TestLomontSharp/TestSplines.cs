@@ -4,6 +4,7 @@ using NUnit.Framework;
 using Lomont.Geometry;
 using System.Collections.Generic;
 using System;
+using NUnit.Framework.Legacy;
 
 namespace Tests
 {
@@ -70,7 +71,7 @@ namespace Tests
             var C = bspline.CurvePoint(u);
 
             // C(5/2) = 1/2 p2 + 6/8 p3 + 1/8 p4
-            Assert.True(Same(C, P2 * (1.0 / 8.0) + P3 * (6 / 8.0) + P4 * (1.0 / 8.0)));
+            ClassicAssert.True(Same(C, P2 * (1.0 / 8.0) + P3 * (6 / 8.0) + P4 * (1.0 / 8.0)));
         }
 
 
@@ -109,14 +110,14 @@ namespace Tests
                 var u = 5.0 / 2.0; // parameter
                 var ders = bs.CurveDerivatives(u);
 
-                Assert.True(ders.Count == p + 1);
+                ClassicAssert.True(ders.Count == p + 1);
 
                 var C0 = ders[0];
                 // C(5/2) = 1/2 p2 + 6/8 p3 + 1/8 p4
-                Assert.True(Same(C0, (P2 * (1.0 / 8.0) + P3 * (6 / 8.0) + P4 * (1.0 / 8.0))));
+                ClassicAssert.True(Same(C0, (P2 * (1.0 / 8.0) + P3 * (6 / 8.0) + P4 * (1.0 / 8.0))));
 
                 var C1 = ders[1];
-                Assert.True(Same(C1, P2 * (-0.5) + P4 * 0.5));
+                ClassicAssert.True(Same(C1, P2 * (-0.5) + P4 * 0.5));
             }
         }
 
@@ -143,42 +144,42 @@ namespace Tests
             var u = 0.6;
             var p1 = bs1.CurvePoint(u);
             var p2 = bs2.CurvePoint(u);
-            Assert.True(Same3(p1, p2));
+            ClassicAssert.True(Same3(p1, p2));
 
 #if true
-            Assert.AreEqual(bs1.Knots.Length, 9);
-            Assert.AreEqual(bs1.Points.Count, 5);
+            ClassicAssert.AreEqual(bs1.Knots.Length, 9);
+            ClassicAssert.AreEqual(bs1.Points.Count, 5);
             bs1.InsertKnot(0.7, 2);
-            Assert.AreEqual(bs1.Knots.Length, 11);
-            Assert.AreEqual(bs1.Points.Count, 7);
+            ClassicAssert.AreEqual(bs1.Knots.Length, 11);
+            ClassicAssert.AreEqual(bs1.Points.Count, 7);
 
             bs2.InsertKnot(0.45, 1);
             bs1.InsertKnot(0.75, 3);
 
             var p1b = bs1.CurvePoint(u);
             var p2b = bs2.CurvePoint(u);
-            Assert.True(Same3(p1, p1b));
-            Assert.True(Same3(p1b, p2b));
+            ClassicAssert.True(Same3(p1, p1b));
+            ClassicAssert.True(Same3(p1b, p2b));
 
             var len = bs1.Points.Count;
-            Assert.AreEqual(len, 10);
+            ClassicAssert.AreEqual(len, 10);
 
 
             var removed = bs1.RemoveKnot(0.7, 1);
-            Assert.AreEqual(removed, 1);
-            Assert.AreEqual(bs1.Points.Count, len - 1);
+            ClassicAssert.AreEqual(removed, 1);
+            ClassicAssert.AreEqual(bs1.Points.Count, len - 1);
             var p1c = bs1.CurvePoint(u);
-            Assert.True(Same3(p1, p1c));
+            ClassicAssert.True(Same3(p1, p1c));
 
             removed = bs1.RemoveKnot(0.7, 1);
-            Assert.AreEqual(removed, 1);
-            Assert.AreEqual(bs1.Points.Count, len - 2);
+            ClassicAssert.AreEqual(removed, 1);
+            ClassicAssert.AreEqual(bs1.Points.Count, len - 2);
             var p1d = bs1.CurvePoint(u);
             removed = bs1.RemoveKnot(0.7, 1);
-            Assert.AreEqual(bs1.Points.Count, len - 2);
-            Assert.AreEqual(removed, 0);
+            ClassicAssert.AreEqual(bs1.Points.Count, len - 2);
+            ClassicAssert.AreEqual(removed, 0);
 
-            Assert.True(Same3(p1, p1d));
+            ClassicAssert.True(Same3(p1, p1d));
 
 
 

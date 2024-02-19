@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Lomont.Numerical;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using static Lomont.Numerical.Utility;
 
 namespace TestLomontSharp
@@ -24,7 +25,7 @@ namespace TestLomontSharp
                 2432902008176640000
             };
             for (var n = 0; n <=20; ++n)
-                Assert.AreEqual(ans[n],Factorial(n));
+                ClassicAssert.AreEqual(ans[n],Factorial(n));
         }
 
         [Test]
@@ -112,7 +113,7 @@ namespace TestLomontSharp
             {
                 var mn = Multinomial(n1, n2, n3);
                 var cn = ans[n1 * (mx+1) * (mx+1) + n2 * (mx+1) + n3];
-                Assert.AreEqual(mn, cn);
+                ClassicAssert.AreEqual(mn, cn);
             }
         }
 
@@ -142,7 +143,7 @@ namespace TestLomontSharp
             for (var k = 0; k <= 10; ++k)
             {
                 var nCk = Binomial(n,k);
-                Assert.AreEqual(ans[n+2][k+2],nCk);
+                ClassicAssert.AreEqual(ans[n+2][k+2],nCk);
             }
         }
 
@@ -178,9 +179,9 @@ namespace TestLomontSharp
 
             if ((n2 - n1).Length > 0.1)
                 n2 = -n2; // recerse normal
-            Assert.True((n1 - n2).Length < 0.000001);
-            Assert.True(Vec3.Dot(n1, p1 - p2) < 0.0001); // point on plane
-            Assert.True(Vec3.Dot(n2, p1 - p2) < 0.0001); // point on plane
+            ClassicAssert.True((n1 - n2).Length < 0.000001);
+            ClassicAssert.True(Vec3.Dot(n1, p1 - p2) < 0.0001); // point on plane
+            ClassicAssert.True(Vec3.Dot(n2, p1 - p2) < 0.0001); // point on plane
         }
     }
 }

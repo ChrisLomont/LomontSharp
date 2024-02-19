@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Lomont.Algorithms;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace TestLomontSharp
 {
@@ -43,13 +44,13 @@ namespace TestLomontSharp
                 }
 
                 var same = true;
-                Assert.True(matchesAho.Count == matchesBrute.Count);
+                ClassicAssert.True(matchesAho.Count == matchesBrute.Count);
 
                 // need same ordering
                 same &= matchesAho.TrueForAll(pair => matchesBrute.Contains(pair));
                 same &= matchesBrute.TrueForAll(pair => matchesAho.Contains(pair));
 
-                Assert.True(same);
+                ClassicAssert.True(same);
             }
         }
 

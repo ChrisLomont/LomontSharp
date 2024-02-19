@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Lomont.Algorithms;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace TestLomontSharp
 {
@@ -23,11 +24,11 @@ namespace TestLomontSharp
                 var matchesBoyer = BoyerMoore.Find(text, pattern);
                 var matchesBrute = BruteFind(text, pattern);
                 var same = true;
-                Assert.True(matchesBoyer.Count == matchesBrute.Count);
+                ClassicAssert.True(matchesBoyer.Count == matchesBrute.Count);
 
                 for (var i = 0; i < matchesBoyer.Count; ++i)
                     same &= matchesBoyer[i] == matchesBrute[i];
-                Assert.True(same);
+                ClassicAssert.True(same);
             }
 
 

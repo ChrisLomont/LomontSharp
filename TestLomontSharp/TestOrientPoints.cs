@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace TestLomontSharp
 {
@@ -7,8 +8,8 @@ namespace TestLomontSharp
         [Test]
         public void Test1()
         {
-            Assert.True(Lomont.Geometry.OrientPoints.TestOrientation3D());
-            Assert.True(Lomont.Geometry.OrientPoints.TestOrientation2D());
+            ClassicAssert.True(Lomont.Geometry.OrientPoints.TestOrientation3D());
+            ClassicAssert.True(Lomont.Geometry.OrientPoints.TestOrientation2D());
         }
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using Lomont.Formats;
+using NUnit.Framework.Legacy;
 
 namespace TestLomontSharp
 {
@@ -57,7 +58,7 @@ namespace TestLomontSharp
                     n => n.Name,
                     TreeTextFormatter.Style.Ascii
                 );
-            Assert.AreEqual(sw1.ToString(),
+            ClassicAssert.AreEqual(sw1.ToString(),
 @"0
  +--1
  |   +--1.1
@@ -85,7 +86,7 @@ namespace TestLomontSharp
                     n => n.Name,
                     TreeTextFormatter.Style.Unicode
                 );
-            Assert.AreEqual(sw2.ToString(),
+            ClassicAssert.AreEqual(sw2.ToString(),
 @"0
  ├─1
  │  ├─1.1
