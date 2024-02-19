@@ -115,9 +115,15 @@ public static class Filters
 
         static int Mirror(int v, int del)
         {
-            v %= (2 * del); // mirror is 2*width wide
+            var period = 2 * del - 2;
+            v %= period; // mirror cycle has period (2*width-2) 
+
+            // C# (and C/C++) convert (negative)%(positive) to a negative value, so...
             if (v < 0) v = -v; // mirror on left
-            if (v >= del) v = 2 * del - 1 - v; // mirror on right
+
+            if (v >= del) 
+                v = period - v; // mirror on right
+
             return v;
         }
     }
