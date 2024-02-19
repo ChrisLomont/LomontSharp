@@ -92,6 +92,30 @@ namespace TestLomontSharp
         }
 
         [Test]
+        public void Test3x2Mult()
+        {
+            var v2 = new Vec2(1, 2);
+            var m = new Mat3(
+                3, 1, 10,
+                6, 7, 10,
+                9, 10, -24
+            );
+
+            // projective
+            // x' = 3*1+1*2+10 = 15
+            // y' = 6*1+7*2+10 = 30
+            // w' = 9*1+10*2-24 = 5
+            // x = x'/w' = 3
+            // y = y'/w'= 6
+
+            var ans = m * v2; // treat as projective
+            Console.WriteLine($"{ans}");
+
+            Assert.True((ans - new Vec2(3,6)).Length < 0.0001);
+        }
+
+
+        [Test]
         public void Test3Mult()
         {
             var v3 = new Vec3(1, 2, 3);

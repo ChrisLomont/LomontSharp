@@ -234,14 +234,12 @@ namespace Lomont.Numerical
             return m;
         }
 
-        // maniplate 2 vector, treating mat3 as affine transform
+        // manipulate 2 vector, treating mat3 as affine transform
         public static Vec2 operator *(Mat3 a, Vec2 b)
         {
-            var v = new Vec2(0, 0);
-            for (var i = 0; i < 2; ++i)
-            for (var j = 0; j < 3; ++j)
-                v[i] += a[i, j] * b[j];
-            return v;
+            var v3 = new Vec3(b.X, b.Y, 1.0);
+            var a1 = a * v3;
+            return new Vec2(a1.X/a1.Z,a1.Y/a1.Z);
         }
 
         /// <summary>

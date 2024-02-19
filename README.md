@@ -55,7 +55,7 @@ Much more listed in the code TODO section. I have decades of code to pull pieces
 
 ## History
 
-Release 0.6.6 - 2/19/2024 - fixed filter edge condition, updated to .NET 8.0, updated Skia sharp past a recent one with a security hole
+Release 0.6.6 - 2/19/2024 - fixed filter edge condition, updated to .NET 8.0, updated Skia sharp past a recent one with a security hole, fixed error in mat3x3 * vec2 behavior.
 
 Release 0.6.5 - 1/18/2023 - added BinaryTree, fixed bitmap colors, added bilateral and Gaussian filters
 
