@@ -5,10 +5,10 @@
     <Nullable>enable</Nullable>
     <AssemblyName>LomontSharp</AssemblyName>
     <RootNamespace>Lomont</RootNamespace>
-    <Version>0.6.5</Version>
+    <Version>0.6.6</Version>
     <Authors>Chris Lomont</Authors>
     <Description>Chris Lomont commonly used components</Description>
-    <Copyright>Copyright Chris Lomont 2020-2023</Copyright>
+    <Copyright>Copyright Chris Lomont 2020-2024</Copyright>
     <PackageProjectUrl>https://github.com/ChrisLomont/LomontSharp</PackageProjectUrl>
     <RepositoryUrl>https://github.com/ChrisLomont/LomontSharp</RepositoryUrl>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
